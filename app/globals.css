@@ -94,7 +94,6 @@ body {
   background-color: var(--dental-teal);
   color: white;
   padding: 15px 20px;
-  margin: -20px -20px 20px -20px;
   border-radius: 8px 8px 0 0;
 }
 
@@ -161,6 +160,15 @@ body {
   background-color: #c82333;
 }
 
+.btn-success {
+  background-color: #28a745;
+  color: white;
+}
+
+.btn-success:hover {
+  background-color: #218838;
+}
+
 .tooth-container {
   position: relative;
   transition: all 0.2s ease;
@@ -191,7 +199,7 @@ body {
   flex-wrap: wrap;
   justify-content: center;
   gap: 2px;
-  margin-bottom: 20px;
+  margin-bottom: 35px;
 }
 
 .surface-legend {
@@ -250,4 +258,29 @@ body {
 
 .surface-indicator:hover::before {
   border-color: var(--dental-teal);
+}
+
+.signature-small canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+.signature-canvas-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+@media (max-width: 768px) {
+  .signature-small canvas {
+    width: 150px !important;
+    height: 60px !important;
+  }
+  
+  .signature-canvas-container canvas {
+    width: 100% !important;
+    max-width: 300px;
+    height: auto !important;
+    min-height: 100px;
+  }
 }

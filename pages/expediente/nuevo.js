@@ -1,8 +1,11 @@
 import { useRouter } from 'next/router';
 import ExpedienteForm from '../../components/ExpedienteForm';
+import Modal from '../../components/Modal';
+import useModal from '../../hooks/useModal';
 
 export default function NuevoExpediente() {
   const router = useRouter();
+  const { modal, closeModal, showSuccess, showError } = useModal();
 
   const handleSubmit = async (data) => {
     try {
@@ -16,15 +19,17 @@ export default function NuevoExpediente() {
 
       if (response.ok) {
         const result = await response.json();
-        alert('Expediente creado exitosamente');
-        router.push(`/expediente/${result.id}`);
+        showSuccess('¡Expediente creado!', 'El expediente se ha creado exitosamente');
+        setTimeout(() => {
+          router.push(`/expediente/${result.id}`);
+        }, 1500);
       } else {
         const error = await response.json();
-        alert(`Error: ${error.error}`);
+        showError('Error al crear', error.error);
       }
     } catch (error) {
       console.error('Error creating expediente:', error);
-      alert('Error al crear el expediente');
+      showError('Error de conexión', 'Error al crear el expediente. Verifique su conexión.');
     }
   };
 
@@ -33,6 +38,17 @@ export default function NuevoExpediente() {
       <div className="max-w-4xl mx-auto py-8">
         <ExpedienteForm onSubmit={handleSubmit} />
       </div>
+
+      <Modal
+        isOpen={modal.isOpen}
+        onClose={closeModal}
+        title={modal.title}
+        message={modal.message}
+        type={modal.type}
+        confirmText={modal.confirmText}
+        cancelText={modal.cancelText}
+        onConfirm={modal.onConfirm}
+      />
     </div>
   );
 }

@@ -160,7 +160,7 @@ export default function Odontogram({ data = '{}', onChange }) {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          margin: '2px'
+          margin: '2px 2px 25px 2px'
         }}
       >
         {/* Render all tooth surfaces */}

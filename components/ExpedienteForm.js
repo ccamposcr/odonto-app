@@ -1,8 +1,13 @@
 import { useState } from 'react';
+import Image from 'next/image';
 import TreatmentTable from './TreatmentTable';
 import Odontogram from './Odontogram';
+import Modal from './Modal';
+import SignatureCanvas from './SignatureCanvas';
+import useModal from '../hooks/useModal';
 
 export default function ExpedienteForm({ expediente = null, onSubmit }) {
+  const { modal, closeModal, showError } = useModal();
   const [formData, setFormData] = useState({
     cedula: expediente?.cedula || '',
     paciente: expediente?.paciente || '',
@@ -14,19 +19,19 @@ export default function ExpedienteForm({ expediente = null, onSubmit }) {
     direccion: expediente?.direccion || '',
     contacto_emergencia: expediente?.contacto_emergencia || '',
     email: expediente?.email || '',
-    problemas_cardiacos: expediente?.problemas_cardiacos || false,
-    enfermedades_rinon: expediente?.enfermedades_rinon || false,
-    enfermedades_higado: expediente?.enfermedades_higado || false,
-    diabetes: expediente?.diabetes || false,
-    hipertension: expediente?.hipertension || false,
-    epilepsia: expediente?.epilepsia || false,
-    problemas_nerviosos: expediente?.problemas_nerviosos || false,
-    problemas_hemorragicos: expediente?.problemas_hemorragicos || false,
-    tomando_medicamentos: expediente?.tomando_medicamentos || false,
-    alergia_medicamento: expediente?.alergia_medicamento || false,
-    alergia_anestesia_dental: expediente?.alergia_anestesia_dental || false,
-    embarazada: expediente?.embarazada || false,
-    problemas_tratamiento_dental: expediente?.problemas_tratamiento_dental || false,
+    problemas_cardiacos: Boolean(expediente?.problemas_cardiacos),
+    enfermedades_rinon: Boolean(expediente?.enfermedades_rinon),
+    enfermedades_higado: Boolean(expediente?.enfermedades_higado),
+    diabetes: Boolean(expediente?.diabetes),
+    hipertension: Boolean(expediente?.hipertension),
+    epilepsia: Boolean(expediente?.epilepsia),
+    problemas_nerviosos: Boolean(expediente?.problemas_nerviosos),
+    problemas_hemorragicos: Boolean(expediente?.problemas_hemorragicos),
+    tomando_medicamentos: Boolean(expediente?.tomando_medicamentos),
+    alergia_medicamento: Boolean(expediente?.alergia_medicamento),
+    alergia_anestesia_dental: Boolean(expediente?.alergia_anestesia_dental),
+    embarazada: Boolean(expediente?.embarazada),
+    problemas_tratamiento_dental: Boolean(expediente?.problemas_tratamiento_dental),
     firma_paciente: expediente?.firma_paciente || '',
     odontogram_data: expediente?.odontogram_data || '{}',
   });
@@ -45,17 +50,17 @@ export default function ExpedienteForm({ expediente = null, onSubmit }) {
     e.preventDefault();
     
     if (!formData.cedula.trim()) {
-      alert('La cédula es obligatoria');
+      showError('Campo obligatorio', 'La cédula es obligatoria');
       return;
     }
     
     if (!formData.paciente.trim()) {
-      alert('El nombre del paciente es obligatorio');
+      showError('Campo obligatorio', 'El nombre del paciente es obligatorio');
       return;
     }
 
     if (!/^\d+$/.test(formData.cedula.trim())) {
-      alert('La cédula debe contener solo números');
+      showError('Formato incorrecto', 'La cédula debe contener solo números');
       return;
     }
 
@@ -66,20 +71,26 @@ export default function ExpedienteForm({ expediente = null, onSubmit }) {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white">
+    <div className="max-w-4xl mx-auto p-3 md:p-6 bg-white">
       <div className="dental-header">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
-              <span className="text-dental-teal text-xl font-bold">🦷</span>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
+          <div className="flex items-center space-x-3 md:space-x-4">
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-full flex items-center justify-center overflow-hidden">
+              <Image
+                src="/images/dental-logo.png"
+                alt="Clínica Dental Logo"
+                width={48}
+                height={48}
+                className="w-full h-full object-contain"
+              />
             </div>
             <div>
-              <h1 className="text-xl font-bold">Clínica Dental</h1>
-              <p className="text-sm opacity-90">DRA. LAURA CAMPOS - UCR</p>
+              <h1 className="text-lg md:text-xl font-bold">Clínica Dental</h1>
+              <p className="text-xs md:text-sm opacity-90">DRA. LAURA CAMPOS - UCR</p>
             </div>
           </div>
-          <div>
-            <h2 className="text-lg font-bold">EXPEDIENTE CLÍNICO</h2>
+          <div className="text-center sm:text-right">
+            <h2 className="text-base md:text-lg font-bold">EXPEDIENTE CLÍNICO</h2>
           </div>
         </div>
       </div>
@@ -198,10 +209,10 @@ export default function ExpedienteForm({ expediente = null, onSubmit }) {
 
         <div className="form-section">
           <div className="dental-header">
-            <h3 className="text-lg font-bold">HISTORIA MÉDICA</h3>
+            <h3 className="text-base md:text-lg font-bold">HISTORIA MÉDICA</h3>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+          <div className="grid grid-cols-1 gap-3 md:gap-4 mt-4">
             {[
               { key: 'problemas_cardiacos', label: 'Problemas cardiacos' },
               { key: 'enfermedades_rinon', label: 'Enfermedades del riñón' },
@@ -217,28 +228,28 @@ export default function ExpedienteForm({ expediente = null, onSubmit }) {
               { key: 'embarazada', label: 'Está embarazada' },
               { key: 'problemas_tratamiento_dental', label: 'Problemas con algún tratamiento dental' },
             ].map(({ key, label }) => (
-              <div key={key} className="flex items-center space-x-4">
-                <span className="flex-1">{label}</span>
-                <div className="flex space-x-4">
-                  <label className="flex items-center">
+              <div key={key} className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0 border-b border-gray-100 pb-2">
+                <span className="text-sm md:text-base font-medium text-gray-700">{label}</span>
+                <div className="flex space-x-6">
+                  <label className="flex items-center text-sm">
                     <input
                       type="radio"
                       name={key}
                       checked={formData[key] === true}
                       onChange={() => setFormData(prev => ({ ...prev, [key]: true }))}
-                      className="mr-2"
+                      className="mr-2 text-dental-teal"
                     />
-                    Sí
+                    <span className="font-medium">Sí</span>
                   </label>
-                  <label className="flex items-center">
+                  <label className="flex items-center text-sm">
                     <input
                       type="radio"
                       name={key}
                       checked={formData[key] === false}
                       onChange={() => setFormData(prev => ({ ...prev, [key]: false }))}
-                      className="mr-2"
+                      className="mr-2 text-dental-teal"
                     />
-                    No
+                    <span className="font-medium">No</span>
                   </label>
                 </div>
               </div>
@@ -247,12 +258,13 @@ export default function ExpedienteForm({ expediente = null, onSubmit }) {
 
           <div className="form-field mt-4">
             <label>Firma del paciente:</label>
-            <input
-              type="text"
-              name="firma_paciente"
+            <SignatureCanvas
               value={formData.firma_paciente}
-              onChange={handleInputChange}
-              className="form-control"
+              onChange={(signature) => setFormData(prev => ({ ...prev, firma_paciente: signature }))}
+              width={350}
+              height={120}
+              placeholder="Firma del paciente"
+              className="w-full"
             />
           </div>
         </div>
@@ -271,22 +283,33 @@ export default function ExpedienteForm({ expediente = null, onSubmit }) {
           />
         </div>
 
-        <div className="flex justify-end space-x-4">
+        <div className="flex flex-col sm:flex-row sm:justify-end space-y-3 sm:space-y-0 sm:space-x-4">
           <button
             type="button"
             onClick={() => window.history.back()}
-            className="btn btn-secondary"
+            className="btn btn-secondary w-full sm:w-auto order-2 sm:order-1"
           >
             Cancelar
           </button>
           <button
             type="submit"
-            className="btn btn-primary"
+            className="btn btn-primary w-full sm:w-auto order-1 sm:order-2"
           >
             {expediente ? 'Actualizar' : 'Crear'} Expediente
           </button>
         </div>
       </form>
+
+      <Modal
+        isOpen={modal.isOpen}
+        onClose={closeModal}
+        title={modal.title}
+        message={modal.message}
+        type={modal.type}
+        confirmText={modal.confirmText}
+        cancelText={modal.cancelText}
+        onConfirm={modal.onConfirm}
+      />
     </div>
   );
 }

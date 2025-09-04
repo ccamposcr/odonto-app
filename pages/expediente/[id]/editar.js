@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import ExpedienteForm from '../../../components/ExpedienteForm';
+import Modal from '../../../components/Modal';
+import useModal from '../../../hooks/useModal';
 
 export default function EditarExpediente() {
   const [expediente, setExpediente] = useState(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { id } = router.query;
+  const { modal, closeModal, showSuccess, showError } = useModal();
 
   useEffect(() => {
     if (id) {
@@ -21,12 +24,12 @@ export default function EditarExpediente() {
         const data = await response.json();
         setExpediente(data);
       } else {
-        alert('Expediente no encontrado');
-        router.push('/');
+        showError('Expediente no encontrado', 'El expediente solicitado no existe');
+        setTimeout(() => router.push('/'), 2000);
       }
     } catch (error) {
       console.error('Error fetching expediente:', error);
-      alert('Error al cargar el expediente');
+      showError('Error de conexión', 'Error al cargar el expediente. Verifique su conexión.');
     } finally {
       setLoading(false);
     }
@@ -43,15 +46,17 @@ export default function EditarExpediente() {
       });
 
       if (response.ok) {
-        alert('Expediente actualizado exitosamente');
-        router.push(`/expediente/${id}`);
+        showSuccess('¡Expediente actualizado!', 'El expediente se ha actualizado exitosamente');
+        setTimeout(() => {
+          router.push(`/expediente/${id}`);
+        }, 1500);
       } else {
         const error = await response.json();
-        alert(`Error: ${error.error}`);
+        showError('Error al actualizar', error.error);
       }
     } catch (error) {
       console.error('Error updating expediente:', error);
-      alert('Error al actualizar el expediente');
+      showError('Error de conexión', 'Error al actualizar el expediente. Verifique su conexión.');
     }
   };
 
@@ -93,6 +98,17 @@ export default function EditarExpediente() {
         </div>
         <ExpedienteForm expediente={expediente} onSubmit={handleSubmit} />
       </div>
+
+      <Modal
+        isOpen={modal.isOpen}
+        onClose={closeModal}
+        title={modal.title}
+        message={modal.message}
+        type={modal.type}
+        confirmText={modal.confirmText}
+        cancelText={modal.cancelText}
+        onConfirm={modal.onConfirm}
+      />
     </div>
   );
 }

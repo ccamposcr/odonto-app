@@ -2,6 +2,9 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
-  "/expediente/nuevo": "pages/expediente/nuevo.js",
-  "/": "pages/index.js"
+  "/": "pages/index.js",
+  "/api/expedientes": "pages/api/expedientes.js",
+  "/expediente/[id]": "pages/expediente/[id].js",
+  "/api/expedientes/[id]": "pages/api/expedientes/[id].js",
+  "/expediente/[id]/editar": "pages/expediente/[id]/editar.js"
 }

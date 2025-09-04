@@ -1,5 +1,72 @@
 import { useState } from 'react';
 import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
+import SignatureCanvas from './SignatureCanvas';
+
+const TOOTH_NUMBERS = [
+  // Arcada Superior
+  18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28,
+  // Arcada Inferior  
+  48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38
+];
+
+const TREATMENT_OPTIONS = [
+  {
+    category: "Tipos de resina",
+    treatments: [
+      "Resina CI",
+      "Resina CII", 
+      "Resina CIII",
+      "Resina CIV",
+      "Resina CV"
+    ]
+  },
+  {
+    category: "Limpieza",
+    treatments: [
+      "Limpieza",
+      "Limpieza con anestesia"
+    ]
+  },
+  {
+    category: "Cirugía",
+    treatments: [
+      "Extracción",
+      "Extracción quirúrgica",
+      "Cirugía"
+    ]
+  },
+  {
+    category: "Prótesis",
+    treatments: [
+      "Protesis parcial",
+      "Protesis total",
+      "Corona",
+      "Puente"
+    ]
+  },
+  {
+    category: "Especialidades",
+    treatments: [
+      "Ortodoncia",
+      "Tratamiento periodontal",
+      "Endodoncia",
+      "Endoposte"
+    ]
+  },
+  {
+    category: "Estética",
+    treatments: [
+      "Blanqueamiento láser",
+      "Blanqueamiento de fundas"
+    ]
+  },
+  {
+    category: "Implantología",
+    treatments: [
+      "Implante dental"
+    ]
+  }
+];
 
 export default function TreatmentTable({ treatments = [], onChange }) {
   const addTreatment = () => {
@@ -44,7 +111,7 @@ export default function TreatmentTable({ treatments = [], onChange }) {
               <th className="bg-dental-teal text-white p-3 text-left">Fecha</th>
               <th className="bg-dental-teal text-white p-3 text-left">Pieza</th>
               <th className="bg-dental-teal text-white p-3 text-left">Tratamiento Ejecutado</th>
-              <th className="bg-dental-teal text-white p-3 text-left">Firma</th>
+              <th className="bg-dental-teal text-white p-3 text-left">Firma del Paciente</th>
               <th className="bg-dental-teal text-white p-3 text-center">Acción</th>
             </tr>
           </thead>
@@ -60,30 +127,54 @@ export default function TreatmentTable({ treatments = [], onChange }) {
                   />
                 </td>
                 <td className="p-2">
-                  <input
-                    type="text"
+                  <select
                     value={treatment.pieza || ''}
                     onChange={(e) => updateTreatment(treatment.id || index, 'pieza', e.target.value)}
-                    placeholder="Ej: 11, 21, 36"
                     className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-dental-teal focus:border-dental-teal"
-                  />
+                  >
+                    <option value="">Seleccionar pieza</option>
+                    <optgroup label="Arcada Superior">
+                      {TOOTH_NUMBERS.slice(0, 16).map(toothNumber => (
+                        <option key={toothNumber} value={toothNumber}>
+                          {toothNumber}
+                        </option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="Arcada Inferior">
+                      {TOOTH_NUMBERS.slice(16, 32).map(toothNumber => (
+                        <option key={toothNumber} value={toothNumber}>
+                          {toothNumber}
+                        </option>
+                      ))}
+                    </optgroup>
+                  </select>
                 </td>
                 <td className="p-2">
-                  <input
-                    type="text"
+                  <select
                     value={treatment.tratamiento_ejecutado || ''}
                     onChange={(e) => updateTreatment(treatment.id || index, 'tratamiento_ejecutado', e.target.value)}
-                    placeholder="Descripción del tratamiento"
                     className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-dental-teal focus:border-dental-teal"
-                  />
+                  >
+                    <option value="">Seleccionar tratamiento</option>
+                    {TREATMENT_OPTIONS.map((categoryGroup, groupIndex) => (
+                      <optgroup key={groupIndex} label={categoryGroup.category}>
+                        {categoryGroup.treatments.map((treatment, treatmentIndex) => (
+                          <option key={`${groupIndex}-${treatmentIndex}`} value={treatment}>
+                            {treatment}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
                 </td>
                 <td className="p-2">
-                  <input
-                    type="text"
+                  <SignatureCanvas
                     value={treatment.firma || ''}
-                    onChange={(e) => updateTreatment(treatment.id || index, 'firma', e.target.value)}
-                    placeholder="Firma del profesional"
-                    className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-dental-teal focus:border-dental-teal"
+                    onChange={(signature) => updateTreatment(treatment.id || index, 'firma', signature)}
+                    width={200}
+                    height={80}
+                    placeholder="Firma del paciente"
+                    className="signature-small"
                   />
                 </td>
                 <td className="p-2 text-center">
