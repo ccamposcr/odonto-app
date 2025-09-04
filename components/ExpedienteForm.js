@@ -1,42 +1,66 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import TreatmentTable from './TreatmentTable';
 import Odontogram from './Odontogram';
 import Modal from './Modal';
 import SignatureCanvas from './SignatureCanvas';
 import useModal from '../hooks/useModal';
+import useMedicalFields from '../hooks/useMedicalFields';
 
 export default function ExpedienteForm({ expediente = null, onSubmit }) {
   const { modal, closeModal, showError } = useModal();
-  const [formData, setFormData] = useState({
-    cedula: expediente?.cedula || '',
-    paciente: expediente?.paciente || '',
-    encargado: expediente?.encargado || '',
-    fecha_nacimiento: expediente?.fecha_nacimiento || '',
-    edad: expediente?.edad || '',
-    sexo: expediente?.sexo || '',
-    telefono: expediente?.telefono || '',
-    direccion: expediente?.direccion || '',
-    contacto_emergencia: expediente?.contacto_emergencia || '',
-    email: expediente?.email || '',
-    problemas_cardiacos: Boolean(expediente?.problemas_cardiacos),
-    enfermedades_rinon: Boolean(expediente?.enfermedades_rinon),
-    enfermedades_higado: Boolean(expediente?.enfermedades_higado),
-    diabetes: Boolean(expediente?.diabetes),
-    hipertension: Boolean(expediente?.hipertension),
-    epilepsia: Boolean(expediente?.epilepsia),
-    problemas_nerviosos: Boolean(expediente?.problemas_nerviosos),
-    problemas_hemorragicos: Boolean(expediente?.problemas_hemorragicos),
-    tomando_medicamentos: Boolean(expediente?.tomando_medicamentos),
-    alergia_medicamento: Boolean(expediente?.alergia_medicamento),
-    alergia_anestesia_dental: Boolean(expediente?.alergia_anestesia_dental),
-    embarazada: Boolean(expediente?.embarazada),
-    problemas_tratamiento_dental: Boolean(expediente?.problemas_tratamiento_dental),
-    firma_paciente: expediente?.firma_paciente || '',
-    odontogram_data: expediente?.odontogram_data || '{}',
+  const { medicalFields, loading: medicalFieldsLoading } = useMedicalFields();
+  const [formData, setFormData] = useState(() => {
+    // Base form data
+    const baseData = {
+      cedula: expediente?.cedula || '',
+      paciente: expediente?.paciente || '',
+      encargado: expediente?.encargado || '',
+      fecha_nacimiento: expediente?.fecha_nacimiento || '',
+      edad: expediente?.edad || '',
+      sexo: expediente?.sexo || '',
+      telefono: expediente?.telefono || '',
+      direccion: expediente?.direccion || '',
+      contacto_emergencia: expediente?.contacto_emergencia || '',
+      email: expediente?.email || '',
+      firma_paciente: expediente?.firma_paciente || '',
+      odontogram_data: expediente?.odontogram_data || '{}',
+    };
+
+    // Add default medical fields (for backwards compatibility)
+    const defaultMedicalFields = [
+      'problemas_cardiacos', 'enfermedades_rinon', 'enfermedades_higado', 'diabetes',
+      'hipertension', 'epilepsia', 'problemas_nerviosos', 'problemas_hemorragicos',
+      'tomando_medicamentos', 'alergia_medicamento', 'alergia_anestesia_dental',
+      'embarazada', 'problemas_tratamiento_dental'
+    ];
+
+    defaultMedicalFields.forEach(field => {
+      baseData[field] = Boolean(expediente?.[field]);
+    });
+
+    return baseData;
   });
 
   const [treatments, setTreatments] = useState(expediente?.tratamientos || []);
+
+  // Update formData when medical fields are loaded
+  useEffect(() => {
+    if (!medicalFieldsLoading && medicalFields.length > 0) {
+      setFormData(prev => {
+        const newData = { ...prev };
+        
+        // Add any new medical fields that aren't already in the form data
+        medicalFields.forEach(field => {
+          if (!(field.field_key in newData)) {
+            newData[field.field_key] = Boolean(expediente?.[field.field_key]);
+          }
+        });
+        
+        return newData;
+      });
+    }
+  }, [medicalFields, medicalFieldsLoading, expediente]);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -213,47 +237,40 @@ export default function ExpedienteForm({ expediente = null, onSubmit }) {
           </div>
           
           <div className="grid grid-cols-1 gap-3 md:gap-4 mt-4">
-            {[
-              { key: 'problemas_cardiacos', label: 'Problemas cardiacos' },
-              { key: 'enfermedades_rinon', label: 'Enfermedades del riñón' },
-              { key: 'enfermedades_higado', label: 'Enfermedades del hígado' },
-              { key: 'diabetes', label: 'Diabetes' },
-              { key: 'hipertension', label: 'Hipertensión' },
-              { key: 'epilepsia', label: 'Epilepsia' },
-              { key: 'problemas_nerviosos', label: 'Problemas nerviosos' },
-              { key: 'problemas_hemorragicos', label: 'Problemas hemorrágicos' },
-              { key: 'tomando_medicamentos', label: 'Está tomando medicamentos' },
-              { key: 'alergia_medicamento', label: 'Alergia a algún medicamento' },
-              { key: 'alergia_anestesia_dental', label: 'Alergia a la anestesia dental' },
-              { key: 'embarazada', label: 'Está embarazada' },
-              { key: 'problemas_tratamiento_dental', label: 'Problemas con algún tratamiento dental' },
-            ].map(({ key, label }) => (
-              <div key={key} className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0 border-b border-gray-100 pb-2">
-                <span className="text-sm md:text-base font-medium text-gray-700">{label}</span>
-                <div className="flex space-x-6">
-                  <label className="flex items-center text-sm">
-                    <input
-                      type="radio"
-                      name={key}
-                      checked={formData[key] === true}
-                      onChange={() => setFormData(prev => ({ ...prev, [key]: true }))}
-                      className="mr-2 text-dental-teal"
-                    />
-                    <span className="font-medium">Sí</span>
-                  </label>
-                  <label className="flex items-center text-sm">
-                    <input
-                      type="radio"
-                      name={key}
-                      checked={formData[key] === false}
-                      onChange={() => setFormData(prev => ({ ...prev, [key]: false }))}
-                      className="mr-2 text-dental-teal"
-                    />
-                    <span className="font-medium">No</span>
-                  </label>
-                </div>
+            {medicalFieldsLoading ? (
+              <div className="text-center py-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-dental-teal mx-auto"></div>
+                <p className="mt-2 text-sm text-gray-500">Cargando campos médicos...</p>
               </div>
-            ))}
+            ) : (
+              medicalFields.map(({ field_key, field_label }) => (
+                <div key={field_key} className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0 border-b border-gray-100 pb-2">
+                  <span className="text-sm md:text-base font-medium text-gray-700">{field_label}</span>
+                  <div className="flex space-x-6">
+                    <label className="flex items-center text-sm">
+                      <input
+                        type="radio"
+                        name={field_key}
+                        checked={formData[field_key] === true}
+                        onChange={() => setFormData(prev => ({ ...prev, [field_key]: true }))}
+                        className="mr-2 text-dental-teal"
+                      />
+                      <span className="font-medium">Sí</span>
+                    </label>
+                    <label className="flex items-center text-sm">
+                      <input
+                        type="radio"
+                        name={field_key}
+                        checked={formData[field_key] === false}
+                        onChange={() => setFormData(prev => ({ ...prev, [field_key]: false }))}
+                        className="mr-2 text-dental-teal"
+                      />
+                      <span className="font-medium">No</span>
+                    </label>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
 
           <div className="form-field mt-4">

@@ -105,10 +105,15 @@ export default function Home() {
                 <p className="text-xs md:text-sm text-dental-teal-100">DRA. LAURA CAMPOS - UCR</p>
               </div>
             </div>
-            <Link href="/expediente/nuevo" className="btn !bg-emerald-700 text-white hover:!bg-emerald-800 w-full sm:w-auto text-center font-semibold shadow-md transition-all">
-              <span className="inline sm:hidden">+ Nuevo</span>
-              <span className="hidden sm:inline">Nuevo Expediente</span>
-            </Link>
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+              <Link href="/expediente/nuevo" className="btn !bg-emerald-700 text-white hover:!bg-emerald-800 w-full sm:w-auto text-center font-semibold shadow-md transition-all">
+                <span className="inline sm:hidden">+ Nuevo</span>
+                <span className="hidden sm:inline">Nuevo Expediente</span>
+              </Link>
+              <Link href="/admin/configuracion" className="btn btn-secondary w-full sm:w-auto text-center text-xs">
+                Configuración
+              </Link>
+            </div>
           </div>
         </div>
       </header>

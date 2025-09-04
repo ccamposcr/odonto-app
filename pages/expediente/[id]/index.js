@@ -6,6 +6,7 @@ import OdontogramReadOnly from '../../../components/OdontogramReadOnly';
 import SignatureDisplay from '../../../components/SignatureDisplay';
 import Modal from '../../../components/Modal';
 import useModal from '../../../hooks/useModal';
+import useMedicalFields from '../../../hooks/useMedicalFields';
 
 export default function VerExpediente() {
   const [expediente, setExpediente] = useState(null);
@@ -13,6 +14,7 @@ export default function VerExpediente() {
   const router = useRouter();
   const { id } = router.query;
   const { modal, closeModal, showConfirm, showSuccess, showError } = useModal();
+  const { medicalFields, loading: medicalFieldsLoading } = useMedicalFields();
 
   useEffect(() => {
     if (id) {
@@ -223,28 +225,21 @@ export default function VerExpediente() {
                 Historia Médica
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                {[
-                  { key: 'problemas_cardiacos', label: 'Problemas cardiacos' },
-                  { key: 'enfermedades_rinon', label: 'Enfermedades del riñón' },
-                  { key: 'enfermedades_higado', label: 'Enfermedades del hígado' },
-                  { key: 'diabetes', label: 'Diabetes' },
-                  { key: 'hipertension', label: 'Hipertensión' },
-                  { key: 'epilepsia', label: 'Epilepsia' },
-                  { key: 'problemas_nerviosos', label: 'Problemas nerviosos' },
-                  { key: 'problemas_hemorragicos', label: 'Problemas hemorrágicos' },
-                  { key: 'tomando_medicamentos', label: 'Está tomando medicamentos' },
-                  { key: 'alergia_medicamento', label: 'Alergia a algún medicamento' },
-                  { key: 'alergia_anestesia_dental', label: 'Alergia a la anestesia dental' },
-                  { key: 'embarazada', label: 'Está embarazada' },
-                  { key: 'problemas_tratamiento_dental', label: 'Problemas con algún tratamiento dental' },
-                ].map(({ key, label }) => (
-                  <div key={key} className="flex justify-between">
-                    <span>{label}:</span>
-                    <span className={`font-semibold ${expediente[key] ? 'text-red-600' : 'text-green-600'}`}>
-                      {expediente[key] ? 'Sí' : 'No'}
-                    </span>
+                {medicalFieldsLoading ? (
+                  <div className="col-span-full text-center py-4">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-dental-teal mx-auto"></div>
+                    <p className="mt-2 text-sm text-gray-500">Cargando historia médica...</p>
                   </div>
-                ))}
+                ) : (
+                  medicalFields.map(({ field_key, field_label }) => (
+                    <div key={field_key} className="flex justify-between">
+                      <span>{field_label}:</span>
+                      <span className={`font-semibold ${expediente[field_key] ? 'text-red-600' : 'text-green-600'}`}>
+                        {expediente[field_key] ? 'Sí' : 'No'}
+                      </span>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
 

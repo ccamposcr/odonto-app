@@ -4,7 +4,10 @@
       "Bash(npm install)",
       "Bash(npm install:*)",
       "Bash(npm run dev:*)",
-      "WebFetch(domain:442271.fs1.hubspotusercontent-na1.net)"
+      "WebFetch(domain:442271.fs1.hubspotusercontent-na1.net)",
+      "Bash(sqlite3:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []

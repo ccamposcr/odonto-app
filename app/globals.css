@@ -284,3 +284,25 @@ body {
     min-height: 100px;
   }
 }
+
+/* Drag and Drop Styles */
+.cursor-grab {
+  cursor: grab;
+}
+
+.cursor-grabbing {
+  cursor: grabbing;
+}
+
+.sortable-ghost {
+  opacity: 0.4;
+}
+
+.sortable-chosen {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.sortable-drag {
+  transform: rotate(5deg);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}

@@ -2,9 +2,12 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
-  "/": "pages/index.js",
-  "/api/expedientes": "pages/api/expedientes.js",
   "/expediente/[id]": "pages/expediente/[id].js",
+  "/": "pages/index.js",
+  "/expediente/[id]/editar": "pages/expediente/[id]/editar.js",
   "/api/expedientes/[id]": "pages/api/expedientes/[id].js",
-  "/expediente/[id]/editar": "pages/expediente/[id]/editar.js"
+  "/api/admin/medical-history-fields": "pages/api/admin/medical-history-fields.js",
+  "/api/expedientes": "pages/api/expedientes.js",
+  "/api/admin/treatment-options": "pages/api/admin/treatment-options.js",
+  "/admin/configuracion": "pages/admin/configuracion.js"
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
 import SignatureCanvas from './SignatureCanvas';
+import useTreatmentOptions from '../hooks/useTreatmentOptions';
 
 const TOOTH_NUMBERS = [
   // Arcada Superior
@@ -9,66 +10,9 @@ const TOOTH_NUMBERS = [
   48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38
 ];
 
-const TREATMENT_OPTIONS = [
-  {
-    category: "Tipos de resina",
-    treatments: [
-      "Resina CI",
-      "Resina CII", 
-      "Resina CIII",
-      "Resina CIV",
-      "Resina CV"
-    ]
-  },
-  {
-    category: "Limpieza",
-    treatments: [
-      "Limpieza",
-      "Limpieza con anestesia"
-    ]
-  },
-  {
-    category: "Cirugía",
-    treatments: [
-      "Extracción",
-      "Extracción quirúrgica",
-      "Cirugía"
-    ]
-  },
-  {
-    category: "Prótesis",
-    treatments: [
-      "Protesis parcial",
-      "Protesis total",
-      "Corona",
-      "Puente"
-    ]
-  },
-  {
-    category: "Especialidades",
-    treatments: [
-      "Ortodoncia",
-      "Tratamiento periodontal",
-      "Endodoncia",
-      "Endoposte"
-    ]
-  },
-  {
-    category: "Estética",
-    treatments: [
-      "Blanqueamiento láser",
-      "Blanqueamiento de fundas"
-    ]
-  },
-  {
-    category: "Implantología",
-    treatments: [
-      "Implante dental"
-    ]
-  }
-];
 
 export default function TreatmentTable({ treatments = [], onChange }) {
+  const { groupedTreatments, loading: treatmentsLoading } = useTreatmentOptions();
   const addTreatment = () => {
     const newTreatment = {
       id: Date.now(),
@@ -154,13 +98,16 @@ export default function TreatmentTable({ treatments = [], onChange }) {
                     value={treatment.tratamiento_ejecutado || ''}
                     onChange={(e) => updateTreatment(treatment.id || index, 'tratamiento_ejecutado', e.target.value)}
                     className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-dental-teal focus:border-dental-teal"
+                    disabled={treatmentsLoading}
                   >
-                    <option value="">Seleccionar tratamiento</option>
-                    {TREATMENT_OPTIONS.map((categoryGroup, groupIndex) => (
-                      <optgroup key={groupIndex} label={categoryGroup.category}>
-                        {categoryGroup.treatments.map((treatment, treatmentIndex) => (
-                          <option key={`${groupIndex}-${treatmentIndex}`} value={treatment}>
-                            {treatment}
+                    <option value="">
+                      {treatmentsLoading ? 'Cargando...' : 'Seleccionar tratamiento'}
+                    </option>
+                    {!treatmentsLoading && Object.entries(groupedTreatments).map(([category, treatments]) => (
+                      <optgroup key={category} label={category}>
+                        {treatments.map((treatmentOption) => (
+                          <option key={treatmentOption.id} value={treatmentOption.treatment_name}>
+                            {treatmentOption.treatment_name}
                           </option>
                         ))}
                       </optgroup>
