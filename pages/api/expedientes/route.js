@@ -65,6 +65,7 @@ export async function POST(request) {
 
     const expedienteId = result.lastInsertRowid;
 
+    // Save treatments
     if (tratamientos && tratamientos.length > 0) {
       const treatmentStmt = db.prepare(`
         INSERT INTO tratamientos (expediente_id, fecha, pieza, tratamiento_ejecutado, firma)
@@ -81,6 +82,34 @@ export async function POST(request) {
             treatment.firma || null
           );
         }
+      }
+    }
+
+    // Save dental surface data for reporting
+    if (expedienteData.odontogram_data) {
+      try {
+        const odontogramData = typeof expedienteData.odontogram_data === 'string' 
+          ? JSON.parse(expedienteData.odontogram_data) 
+          : expedienteData.odontogram_data;
+        
+        if (odontogramData.toothStates) {
+          const surfaceStmt = db.prepare(`
+            INSERT OR REPLACE INTO superficies_dentales (expediente_id, diente, superficie, condicion, updated_at)
+            VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+          `);
+          
+          for (const [diente, superficies] of Object.entries(odontogramData.toothStates)) {
+            if (typeof superficies === 'object' && superficies !== null) {
+              for (const [superficie, condicion] of Object.entries(superficies)) {
+                if (condicion && condicion !== 'normal') {
+                  surfaceStmt.run(expedienteId, parseInt(diente), superficie, condicion);
+                }
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error saving dental surface data:', error);
       }
     }
 

@@ -3,7 +3,8 @@
     "allow": [
       "Bash(npm install)",
       "Bash(npm install:*)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "WebFetch(domain:442271.fs1.hubspotusercontent-na1.net)"
     ],
     "deny": [],
     "ask": []

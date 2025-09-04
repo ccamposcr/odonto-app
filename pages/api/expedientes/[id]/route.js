@@ -79,8 +79,11 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ error: 'Expediente not found' }, { status: 404 });
     }
 
+    // Delete existing treatments and surface data
     db.prepare('DELETE FROM tratamientos WHERE expediente_id = ?').run(id);
+    db.prepare('DELETE FROM superficies_dentales WHERE expediente_id = ?').run(id);
 
+    // Save treatments
     if (tratamientos && tratamientos.length > 0) {
       const treatmentStmt = db.prepare(`
         INSERT INTO tratamientos (expediente_id, fecha, pieza, tratamiento_ejecutado, firma)
@@ -97,6 +100,34 @@ export async function PUT(request, { params }) {
             treatment.firma || null
           );
         }
+      }
+    }
+
+    // Save updated dental surface data for reporting
+    if (expedienteData.odontogram_data) {
+      try {
+        const odontogramData = typeof expedienteData.odontogram_data === 'string' 
+          ? JSON.parse(expedienteData.odontogram_data) 
+          : expedienteData.odontogram_data;
+        
+        if (odontogramData.toothStates) {
+          const surfaceStmt = db.prepare(`
+            INSERT INTO superficies_dentales (expediente_id, diente, superficie, condicion, updated_at)
+            VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+          `);
+          
+          for (const [diente, superficies] of Object.entries(odontogramData.toothStates)) {
+            if (typeof superficies === 'object' && superficies !== null) {
+              for (const [superficie, condicion] of Object.entries(superficies)) {
+                if (condicion && condicion !== 'normal') {
+                  surfaceStmt.run(id, parseInt(diente), superficie, condicion);
+                }
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error saving updated dental surface data:', error);
       }
     }
 
