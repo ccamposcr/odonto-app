@@ -20,6 +20,10 @@ export default function handler(req, res) {
       // Create new medical history field
       let { field_key, field_label, field_type = 'boolean', is_active = true, display_order = 0 } = req.body;
       
+      // Trim text fields
+      field_key = field_key?.toString().trim() || null;
+      field_label = field_label?.toString().trim();
+      
       // Convert boolean to integer for SQLite
       is_active = is_active ? 1 : 0;
 
@@ -84,6 +88,9 @@ export default function handler(req, res) {
     } else if (req.method === 'PUT') {
       // Update medical history field
       let { id, field_label, field_type, is_active, display_order } = req.body;
+      
+      // Trim text fields
+      field_label = field_label?.toString().trim() || field_label;
       
       // Convert boolean to integer for SQLite if provided
       if (typeof is_active === 'boolean') {

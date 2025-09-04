@@ -24,8 +24,8 @@ export default function Home() {
   };
 
   const filteredExpedientes = expedientes.filter(exp => 
-    exp.paciente.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    exp.cedula.includes(searchTerm)
+    exp.paciente.toLowerCase().includes(searchTerm.trim().toLowerCase()) ||
+    exp.cedula.includes(searchTerm.trim())
   );
 
   const archivarExpediente = async (id) => {

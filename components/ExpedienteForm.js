@@ -88,8 +88,19 @@ export default function ExpedienteForm({ expediente = null, onSubmit }) {
       return;
     }
 
+    // Crear objeto con datos limpiados (trim en campos de texto)
+    const cleanedFormData = Object.keys(formData).reduce((acc, key) => {
+      const value = formData[key];
+      if (typeof value === 'string' && key !== 'odontogram_data' && key !== 'firma_paciente') {
+        acc[key] = value.trim();
+      } else {
+        acc[key] = value;
+      }
+      return acc;
+    }, {});
+
     onSubmit({
-      ...formData,
+      ...cleanedFormData,
       tratamientos: treatments
     });
   };
@@ -119,9 +130,9 @@ export default function ExpedienteForm({ expediente = null, onSubmit }) {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
         <div className="form-section">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
             <div className="form-field">
               <label>Paciente *</label>
               <input
@@ -275,14 +286,16 @@ export default function ExpedienteForm({ expediente = null, onSubmit }) {
 
           <div className="form-field mt-4">
             <label>Firma del paciente:</label>
-            <SignatureCanvas
-              value={formData.firma_paciente}
-              onChange={(signature) => setFormData(prev => ({ ...prev, firma_paciente: signature }))}
-              width={350}
-              height={120}
-              placeholder="Firma del paciente"
-              className="w-full"
-            />
+            <div className="w-full max-w-md mx-auto">
+              <SignatureCanvas
+                value={formData.firma_paciente}
+                onChange={(signature) => setFormData(prev => ({ ...prev, firma_paciente: signature }))}
+                width={350}
+                height={120}
+                placeholder="Firma del paciente"
+                className="w-full max-w-full"
+              />
+            </div>
           </div>
         </div>
 

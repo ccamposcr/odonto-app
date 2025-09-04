@@ -68,7 +68,7 @@ export default function Odontogram({ data = '{}', onChange }) {
   const handleNotesChange = (e) => {
     const newNotes = e.target.value;
     setNotes(newNotes);
-    updateOdontogramData(toothStates, newNotes);
+    updateOdontogramData(toothStates, newNotes.trim());
   };
 
   const renderToothSurface = (toothNumber, surface) => {
@@ -151,16 +151,16 @@ export default function Odontogram({ data = '{}', onChange }) {
         key={toothNumber}
         className="tooth-container"
         style={{
-          width: '50px',
-          height: '60px',
+          width: 'clamp(32px, 4vw, 50px)',
+          height: 'clamp(38px, 4.8vw, 60px)',
           position: 'relative',
           border: '2px solid #333',
-          borderRadius: '8px',
+          borderRadius: '6px',
           backgroundColor: '#f9f9f9',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          margin: '2px 2px 25px 2px'
+          margin: '1px 1px clamp(15px, 2.5vw, 25px) 1px'
         }}
       >
         {/* Render all tooth surfaces */}
@@ -172,10 +172,10 @@ export default function Odontogram({ data = '{}', onChange }) {
         <div
           style={{
             position: 'absolute',
-            bottom: '-18px',
+            bottom: 'clamp(-16px, -1.6vw, -18px)',
             left: '50%',
             transform: 'translateX(-50%)',
-            fontSize: '10px',
+            fontSize: 'clamp(8px, 1vw, 10px)',
             fontWeight: 'bold',
             color: '#333',
             zIndex: 3
@@ -193,20 +193,20 @@ export default function Odontogram({ data = '{}', onChange }) {
         <h3 className="text-lg font-bold text-gray-800">Odontograma</h3>
       </div>
 
-      <div className="bg-white p-6 border-2 border-gray-200 rounded-lg">
-        <div className="space-y-8">
+      <div className="bg-white p-3 md:p-6 border-2 border-gray-200 rounded-lg overflow-x-auto">
+        <div className="space-y-6 md:space-y-8">
           <div>
-            <h4 className="text-sm font-semibold text-gray-600 mb-4">Arcada Superior</h4>
-            <div className="flex flex-wrap justify-center gap-1">
+            <h4 className="text-sm font-semibold text-gray-600 mb-3 md:mb-4">Arcada Superior</h4>
+            <div className="flex flex-wrap justify-center gap-0.5 md:gap-1 min-w-max px-2">
               {TEETH_NUMBERS.upper.map(toothNumber => renderTooth(toothNumber, 'upper'))}
             </div>
           </div>
 
-          <div className="border-t border-gray-300 my-6"></div>
+          <div className="border-t border-gray-300 my-4 md:my-6"></div>
 
           <div>
-            <h4 className="text-sm font-semibold text-gray-600 mb-4">Arcada Inferior</h4>
-            <div className="flex flex-wrap justify-center gap-1">
+            <h4 className="text-sm font-semibold text-gray-600 mb-3 md:mb-4">Arcada Inferior</h4>
+            <div className="flex flex-wrap justify-center gap-0.5 md:gap-1 min-w-max px-2">
               {TEETH_NUMBERS.lower.map(toothNumber => renderTooth(toothNumber, 'lower'))}
             </div>
           </div>
@@ -216,23 +216,23 @@ export default function Odontogram({ data = '{}', onChange }) {
       <div className="space-y-6">
         <div>
           <h4 className="text-sm font-semibold text-gray-600 mb-3">Condición Seleccionada</h4>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
             {Object.entries(TOOTH_CONDITIONS).map(([key, condition]) => (
               <button
                 key={key}
                 type="button"
                 onClick={() => setSelectedCondition(key)}
-                className={`flex items-center space-x-2 p-3 border-2 rounded-lg transition-all text-left ${
+                className={`flex items-center space-x-2 p-2 md:p-3 border-2 rounded-lg transition-all text-left text-xs md:text-sm ${
                   selectedCondition === key 
                     ? 'border-dental-teal bg-dental-teal bg-opacity-10' 
                     : 'border-gray-200 hover:border-gray-300'
                 }`}
               >
                 <div 
-                  className="w-4 h-4 rounded border flex-shrink-0"
+                  className="w-3 h-3 md:w-4 md:h-4 rounded border flex-shrink-0"
                   style={{ backgroundColor: condition.color, borderColor: condition.border }}
                 />
-                <span className="text-sm font-medium">{condition.label}</span>
+                <span className="font-medium leading-tight">{condition.label}</span>
               </button>
             ))}
           </div>

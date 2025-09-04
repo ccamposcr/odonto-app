@@ -44,15 +44,15 @@ export default async function handler(req, res) {
       `);
       
       const result = stmt.run(
-        expedienteData.paciente,
-        expedienteData.encargado || null,
+        expedienteData.paciente?.toString().trim(),
+        expedienteData.encargado?.toString().trim() || null,
         expedienteData.fecha_nacimiento || null,
         expedienteData.edad || null,
         expedienteData.sexo || null,
-        expedienteData.telefono || null,
-        expedienteData.direccion || null,
-        expedienteData.contacto_emergencia || null,
-        expedienteData.email || null,
+        expedienteData.telefono?.toString().trim() || null,
+        expedienteData.direccion?.toString().trim() || null,
+        expedienteData.contacto_emergencia?.toString().trim() || null,
+        expedienteData.email?.toString().trim() || null,
         expedienteData.problemas_cardiacos ? 1 : 0,
         expedienteData.enfermedades_rinon ? 1 : 0,
         expedienteData.enfermedades_higado ? 1 : 0,

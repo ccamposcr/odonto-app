@@ -30,6 +30,10 @@ export default function handler(req, res) {
       // Create new treatment option
       let { category, treatment_name, is_active = true, display_order = 0 } = req.body;
       
+      // Trim text fields
+      category = category?.toString().trim();
+      treatment_name = treatment_name?.toString().trim();
+      
       // Convert boolean to integer for SQLite
       is_active = is_active ? 1 : 0;
 
@@ -70,6 +74,10 @@ export default function handler(req, res) {
     } else if (req.method === 'PUT') {
       // Update treatment option
       let { id, category, treatment_name, is_active, display_order } = req.body;
+      
+      // Trim text fields
+      category = category?.toString().trim() || category;
+      treatment_name = treatment_name?.toString().trim() || treatment_name;
       
       // Convert boolean to integer for SQLite if provided
       if (typeof is_active === 'boolean') {

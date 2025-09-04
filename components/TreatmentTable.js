@@ -48,7 +48,8 @@ export default function TreatmentTable({ treatments = [], onChange }) {
         </button>
       </div>
 
-      <div className="overflow-x-auto">
+      {/* Desktop table view */}
+      <div className="hidden lg:block overflow-x-auto">
         <table className="treatment-table w-full">
           <thead>
             <tr>
@@ -145,6 +146,116 @@ export default function TreatmentTable({ treatments = [], onChange }) {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile card view */}
+      <div className="lg:hidden space-y-4">
+        {treatments.map((treatment, index) => (
+          <div key={treatment.id || index} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+            <div className="flex justify-between items-start mb-3">
+              <span className="text-sm font-semibold text-dental-teal">
+                Tratamiento #{index + 1}
+              </span>
+              <button
+                type="button"
+                onClick={() => removeTreatment(treatment.id || index)}
+                className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                title="Eliminar tratamiento"
+              >
+                <TrashIcon className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Fecha
+                </label>
+                <input
+                  type="date"
+                  value={treatment.fecha || ''}
+                  onChange={(e) => updateTreatment(treatment.id || index, 'fecha', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-dental-teal focus:border-dental-teal text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Pieza
+                </label>
+                <select
+                  value={treatment.pieza || ''}
+                  onChange={(e) => updateTreatment(treatment.id || index, 'pieza', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-dental-teal focus:border-dental-teal text-sm"
+                >
+                  <option value="">Seleccionar pieza</option>
+                  <optgroup label="Arcada Superior">
+                    {TOOTH_NUMBERS.slice(0, 16).map(toothNumber => (
+                      <option key={toothNumber} value={toothNumber}>
+                        {toothNumber}
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Arcada Inferior">
+                    {TOOTH_NUMBERS.slice(16, 32).map(toothNumber => (
+                      <option key={toothNumber} value={toothNumber}>
+                        {toothNumber}
+                      </option>
+                    ))}
+                  </optgroup>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Tratamiento Ejecutado
+                </label>
+                <select
+                  value={treatment.tratamiento_ejecutado || ''}
+                  onChange={(e) => updateTreatment(treatment.id || index, 'tratamiento_ejecutado', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-dental-teal focus:border-dental-teal text-sm"
+                  disabled={treatmentsLoading}
+                >
+                  <option value="">
+                    {treatmentsLoading ? 'Cargando...' : 'Seleccionar tratamiento'}
+                  </option>
+                  {!treatmentsLoading && Object.entries(groupedTreatments).map(([category, treatments]) => (
+                    <optgroup key={category} label={category}>
+                      {treatments.map((treatmentOption) => (
+                        <option key={treatmentOption.id} value={treatmentOption.treatment_name}>
+                          {treatmentOption.treatment_name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Firma del Paciente
+                </label>
+                <div className="flex justify-center">
+                  <SignatureCanvas
+                    value={treatment.firma || ''}
+                    onChange={(signature) => updateTreatment(treatment.id || index, 'firma', signature)}
+                    width={280}
+                    height={100}
+                    placeholder="Firma del paciente"
+                    className="w-full max-w-full"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+
+        {treatments.length === 0 && (
+          <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
+            <p className="text-sm">No hay tratamientos registrados.</p>
+            <p className="text-sm mt-1">Haga clic en "Agregar Tratamiento" para añadir uno.</p>
+          </div>
+        )}
       </div>
     </div>
   );
