@@ -317,13 +317,13 @@ export default function ExpedienteForm({ expediente = null, onSubmit }) {
           <button
             type="button"
             onClick={() => window.history.back()}
-            className="btn btn-secondary w-full sm:w-auto order-2 sm:order-1"
+            className="btn btn-secondary w-full sm:w-auto order-2 sm:order-1 mb-3 sm:mb-0"
           >
             Cancelar
           </button>
           <button
             type="submit"
-            className="btn btn-primary w-full sm:w-auto order-1 sm:order-2"
+            className="btn btn-primary w-full sm:w-auto order-1 sm:order-2 mb-3 sm:mb-0"
           >
             {expediente ? 'Actualizar' : 'Crear'} Expediente
           </button>

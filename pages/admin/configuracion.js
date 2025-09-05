@@ -801,62 +801,76 @@ export default function ConfiguracionAdmin() {
           </div>
         </header>
 
-        <main className="max-w-6xl mx-auto p-3 md:p-6">
+        <main className="max-w-6xl mx-auto p-2 sm:p-3 md:p-6">
           {/* Tabs Navigation */}
-          <div className="bg-white rounded-lg shadow mb-6">
+          <div className="bg-white rounded-lg shadow mb-4 md:mb-6">
             <div className="border-b border-gray-200">
-              <nav className="flex space-x-8 px-6" aria-label="Tabs">
+              {/* Desktop/Tablet Tabs */}
+              <nav className="hidden sm:flex sm:space-x-4 md:space-x-8 px-4 md:px-6" aria-label="Tabs">
                 <button
                   onClick={() => setActiveTab('users')}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
+                  className={`py-3 md:py-4 px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap transition-colors ${
                     activeTab === 'users'
                       ? 'border-dental-teal text-dental-teal'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
                 >
-                  <UserIcon className="w-5 h-5 inline mr-2" />
-                  Gestión de Usuarios
+                  <UserIcon className="w-4 h-4 sm:w-5 sm:h-5 inline mr-1 sm:mr-2" />
+                  <span className="hidden md:inline">Gestión de </span>Usuarios
                 </button>
                 <button
                   onClick={() => setActiveTab('medical')}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
+                  className={`py-3 md:py-4 px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap transition-colors ${
                     activeTab === 'medical'
                       ? 'border-dental-teal text-dental-teal'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
                 >
-                  <svg className="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 inline mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
-                  Gestión de Historia Médica
+                  <span className="hidden lg:inline">Gestión de </span>Historia Médica
                 </button>
                 <button
                   onClick={() => setActiveTab('treatments')}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
+                  className={`py-3 md:py-4 px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap transition-colors ${
                     activeTab === 'treatments'
                       ? 'border-dental-teal text-dental-teal'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
                 >
-                  <svg className="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 inline mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
                   </svg>
-                  Gestión de Tratamientos
+                  <span className="hidden md:inline">Gestión de </span>Tratamientos
                 </button>
               </nav>
+
+              {/* Mobile Dropdown Tabs */}
+              <div className="sm:hidden px-4 py-3">
+                <select
+                  value={activeTab}
+                  onChange={(e) => setActiveTab(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-dental-teal focus:border-dental-teal text-sm font-medium bg-white"
+                >
+                  <option value="users">👤 Gestión de Usuarios</option>
+                  <option value="medical">📋 Historia Médica</option>
+                  <option value="treatments">🔬 Tratamientos</option>
+                </select>
+              </div>
             </div>
           </div>
 
           {/* Tab Content */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {/* User Management Tab */}
             {activeTab === 'users' && (
-              <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-2xl font-bold text-gray-800 mb-6">Gestión de Usuarios</h2>
+              <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">Gestión de Usuarios</h2>
                 
                 {/* User Form */}
-                <form onSubmit={handleUserSubmit} className="mb-8 p-4 bg-gray-50 rounded-lg">
-                  <h3 className="text-lg font-semibold mb-4">
+                <form onSubmit={handleUserSubmit} className="mb-6 sm:mb-8 p-3 sm:p-4 bg-gray-50 rounded-lg">
+                  <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">
                     {editingUser ? 'Editar Usuario' : 'Nuevo Usuario'}
                   </h3>
                   
@@ -931,7 +945,7 @@ export default function ConfiguracionAdmin() {
                     </label>
                   </div>
                   
-                  <div className="flex space-x-3 mt-4">
+                  <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 mt-4">
                     <button type="submit" className="btn btn-primary">
                       <UserIcon className="w-4 h-4 inline mr-2" />
                       {editingUser ? 'Actualizar' : 'Crear'} Usuario
@@ -1027,12 +1041,12 @@ export default function ConfiguracionAdmin() {
 
             {/* Medical History Tab */}
             {activeTab === 'medical' && (
-              <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-2xl font-bold text-gray-800 mb-6">Gestión de Historia Médica</h2>
+              <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">Gestión de Historia Médica</h2>
                 
                 {/* Medical Form */}
-                <form onSubmit={handleMedicalSubmit} className="mb-8 p-4 bg-gray-50 rounded-lg">
-                  <h3 className="text-lg font-semibold mb-4">
+                <form onSubmit={handleMedicalSubmit} className="mb-6 sm:mb-8 p-3 sm:p-4 bg-gray-50 rounded-lg">
+                  <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">
                     {editingField ? 'Editar Padecimiento' : 'Nuevo Padecimiento'}
                   </h3>
                   
@@ -1064,7 +1078,7 @@ export default function ConfiguracionAdmin() {
                     </div>
                   </div>
                   
-                  <div className="flex space-x-3 mt-4">
+                  <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 mt-4">
                     <button type="submit" className="btn btn-primary">
                       {editingField ? 'Actualizar' : 'Crear'} Padecimiento
                     </button>
@@ -1130,12 +1144,12 @@ export default function ConfiguracionAdmin() {
 
             {/* Treatments Tab */}
             {activeTab === 'treatments' && (
-              <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-2xl font-bold text-gray-800 mb-6">Gestión de Tratamientos</h2>
+              <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">Gestión de Tratamientos</h2>
                 
                 {/* Treatment Form */}
-                <form onSubmit={handleTreatmentSubmit} className="mb-8 p-4 bg-gray-50 rounded-lg">
-                  <h3 className="text-lg font-semibold mb-4">
+                <form onSubmit={handleTreatmentSubmit} className="mb-6 sm:mb-8 p-3 sm:p-4 bg-gray-50 rounded-lg">
+                  <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">
                     {editingTreatment ? 'Editar Tratamiento' : 'Nuevo Tratamiento'}
                   </h3>
                   
@@ -1244,7 +1258,7 @@ export default function ConfiguracionAdmin() {
                     </div>
                   </div>
                   
-                  <div className="flex space-x-3 mt-4">
+                  <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 mt-4">
                     <button type="submit" className="btn btn-primary">
                       {editingTreatment ? 'Actualizar' : 'Crear'} Tratamiento
                     </button>

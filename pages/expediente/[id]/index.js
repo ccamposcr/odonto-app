@@ -165,7 +165,7 @@ export default function VerExpediente() {
               <h3 className="text-xl md:text-2xl font-bold text-gray-800">
                 {expediente.paciente}
               </h3>
-              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+              <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
                 {!expediente.archivado && (
                   <Link 
                     href={`/expediente/${id}/editar`}
