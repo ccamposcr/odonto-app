@@ -5,6 +5,7 @@ import Image from 'next/image';
 import OdontogramReadOnly from '../../../components/OdontogramReadOnly';
 import SignatureDisplay from '../../../components/SignatureDisplay';
 import Modal from '../../../components/Modal';
+import ProtectedRoute from '../../../components/ProtectedRoute';
 import useModal from '../../../hooks/useModal';
 import useMedicalFields from '../../../hooks/useMedicalFields';
 
@@ -131,7 +132,8 @@ export default function VerExpediente() {
   const odontogramData = parseOdontogramData(expediente.odontogram_data);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto py-4 md:py-8 px-3 md:px-0">
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           <div className="dental-header">
@@ -354,6 +356,7 @@ export default function VerExpediente() {
         cancelText={modal.cancelText}
         onConfirm={modal.onConfirm}
       />
-    </div>
+      </div>
+    </ProtectedRoute>
   );
 }

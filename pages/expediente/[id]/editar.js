@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import ExpedienteForm from '../../../components/ExpedienteForm';
 import Modal from '../../../components/Modal';
+import ProtectedRoute from '../../../components/ProtectedRoute';
 import useModal from '../../../hooks/useModal';
 
 export default function EditarExpediente() {
@@ -88,7 +89,8 @@ export default function EditarExpediente() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <ProtectedRoute adminOnly={true}>
+      <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto py-8">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-800">
@@ -109,6 +111,7 @@ export default function EditarExpediente() {
         cancelText={modal.cancelText}
         onConfirm={modal.onConfirm}
       />
-    </div>
+      </div>
+    </ProtectedRoute>
   );
 }

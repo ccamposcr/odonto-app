@@ -80,47 +80,47 @@ export default function Odontogram({ data = '{}', onChange }) {
     const surfaceStyles = {
       O: { // Oclusal/Incisal - Top
         position: 'absolute',
-        top: '2px',
+        top: '1.5px',
         left: '50%',
         transform: 'translateX(-50%)',
-        width: '60%',
-        height: '20%',
-        borderRadius: '4px 4px 0 0'
+        width: '65%',
+        height: '22%',
+        borderRadius: '3px 3px 0 0'
       },
       V: { // Vestibular - Left
         position: 'absolute',
-        left: '2px',
+        left: '1.5px',
         top: '50%',
         transform: 'translateY(-50%)',
-        width: '20%',
-        height: '60%',
-        borderRadius: '4px 0 0 4px'
+        width: '22%',
+        height: '65%',
+        borderRadius: '3px 0 0 3px'
       },
       D: { // Distal - Right
         position: 'absolute',
-        right: '2px',
+        right: '1.5px',
         top: '50%',
         transform: 'translateY(-50%)',
-        width: '20%',
-        height: '60%',
-        borderRadius: '0 4px 4px 0'
+        width: '22%',
+        height: '65%',
+        borderRadius: '0 3px 3px 0'
       },
       L: { // Lingual - Bottom
         position: 'absolute',
-        bottom: '2px',
+        bottom: '1.5px',
         left: '50%',
         transform: 'translateX(-50%)',
-        width: '60%',
-        height: '20%',
-        borderRadius: '0 0 4px 4px'
+        width: '65%',
+        height: '22%',
+        borderRadius: '0 0 3px 3px'
       },
       M: { // Mesial - Center
         position: 'absolute',
         top: '50%',
         left: '50%',
         transform: 'translate(-50%, -50%)',
-        width: '40%',
-        height: '40%',
+        width: '45%',
+        height: '45%',
         borderRadius: '50%'
       }
     };
@@ -151,16 +151,17 @@ export default function Odontogram({ data = '{}', onChange }) {
         key={toothNumber}
         className="tooth-container"
         style={{
-          width: 'clamp(32px, 4vw, 50px)',
-          height: 'clamp(38px, 4.8vw, 60px)',
+          width: 'clamp(24px, 3.5vw, 42px)',
+          height: 'clamp(28px, 4.2vw, 52px)',
           position: 'relative',
-          border: '2px solid #333',
-          borderRadius: '6px',
+          border: '1.5px solid #333',
+          borderRadius: '4px',
           backgroundColor: '#f9f9f9',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          margin: '1px 1px clamp(15px, 2.5vw, 25px) 1px'
+          margin: '1px 0.5px clamp(12px, 2vw, 20px) 0.5px',
+          flexShrink: 0
         }}
       >
         {/* Render all tooth surfaces */}
@@ -172,13 +173,14 @@ export default function Odontogram({ data = '{}', onChange }) {
         <div
           style={{
             position: 'absolute',
-            bottom: 'clamp(-16px, -1.6vw, -18px)',
+            bottom: 'clamp(-14px, -1.4vw, -16px)',
             left: '50%',
             transform: 'translateX(-50%)',
-            fontSize: 'clamp(8px, 1vw, 10px)',
+            fontSize: 'clamp(7px, 0.9vw, 9px)',
             fontWeight: 'bold',
             color: '#333',
-            zIndex: 3
+            zIndex: 3,
+            whiteSpace: 'nowrap'
           }}
         >
           {toothNumber}
@@ -193,21 +195,25 @@ export default function Odontogram({ data = '{}', onChange }) {
         <h3 className="text-lg font-bold text-gray-800">Odontograma</h3>
       </div>
 
-      <div className="bg-white p-3 md:p-6 border-2 border-gray-200 rounded-lg overflow-x-auto">
-        <div className="space-y-6 md:space-y-8">
+      <div className="bg-white p-2 md:p-4 lg:p-6 border-2 border-gray-200 rounded-lg">
+        <div className="space-y-4 md:space-y-6">
           <div>
-            <h4 className="text-sm font-semibold text-gray-600 mb-3 md:mb-4">Arcada Superior</h4>
-            <div className="flex flex-wrap justify-center gap-0.5 md:gap-1 min-w-max px-2">
-              {TEETH_NUMBERS.upper.map(toothNumber => renderTooth(toothNumber, 'upper'))}
+            <h4 className="text-sm font-semibold text-gray-600 mb-2 md:mb-3 text-center">Arcada Superior</h4>
+            <div className="w-full overflow-hidden">
+              <div className="flex flex-wrap justify-center gap-x-0.5 gap-y-1 sm:gap-x-1 md:gap-x-1.5 max-w-full px-1">
+                {TEETH_NUMBERS.upper.map(toothNumber => renderTooth(toothNumber, 'upper'))}
+              </div>
             </div>
           </div>
 
-          <div className="border-t border-gray-300 my-4 md:my-6"></div>
+          <div className="border-t border-gray-300 my-3 md:my-4"></div>
 
           <div>
-            <h4 className="text-sm font-semibold text-gray-600 mb-3 md:mb-4">Arcada Inferior</h4>
-            <div className="flex flex-wrap justify-center gap-0.5 md:gap-1 min-w-max px-2">
-              {TEETH_NUMBERS.lower.map(toothNumber => renderTooth(toothNumber, 'lower'))}
+            <h4 className="text-sm font-semibold text-gray-600 mb-2 md:mb-3 text-center">Arcada Inferior</h4>
+            <div className="w-full overflow-hidden">
+              <div className="flex flex-wrap justify-center gap-x-0.5 gap-y-1 sm:gap-x-1 md:gap-x-1.5 max-w-full px-1">
+                {TEETH_NUMBERS.lower.map(toothNumber => renderTooth(toothNumber, 'lower'))}
+              </div>
             </div>
           </div>
         </div>
@@ -216,15 +222,15 @@ export default function Odontogram({ data = '{}', onChange }) {
       <div className="space-y-6">
         <div>
           <h4 className="text-sm font-semibold text-gray-600 mb-3">Condición Seleccionada</h4>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
             {Object.entries(TOOTH_CONDITIONS).map(([key, condition]) => (
               <button
                 key={key}
                 type="button"
                 onClick={() => setSelectedCondition(key)}
-                className={`flex items-center space-x-2 p-2 md:p-3 border-2 rounded-lg transition-all text-left text-xs md:text-sm ${
+                className={`flex items-center space-x-2 p-2 md:p-3 border-2 rounded-lg transition-all text-left text-xs md:text-sm hover:shadow-sm ${
                   selectedCondition === key 
-                    ? 'border-dental-teal bg-dental-teal bg-opacity-10' 
+                    ? 'border-dental-teal bg-dental-teal bg-opacity-10 shadow-sm' 
                     : 'border-gray-200 hover:border-gray-300'
                 }`}
               >
@@ -232,7 +238,7 @@ export default function Odontogram({ data = '{}', onChange }) {
                   className="w-3 h-3 md:w-4 md:h-4 rounded border flex-shrink-0"
                   style={{ backgroundColor: condition.color, borderColor: condition.border }}
                 />
-                <span className="font-medium leading-tight">{condition.label}</span>
+                <span className="font-medium leading-tight break-words">{condition.label}</span>
               </button>
             ))}
           </div>

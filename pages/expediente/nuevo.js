@@ -1,6 +1,7 @@
 import { useRouter } from 'next/router';
 import ExpedienteForm from '../../components/ExpedienteForm';
 import Modal from '../../components/Modal';
+import ProtectedRoute from '../../components/ProtectedRoute';
 import useModal from '../../hooks/useModal';
 
 export default function NuevoExpediente() {
@@ -34,7 +35,8 @@ export default function NuevoExpediente() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <ProtectedRoute adminOnly={true}>
+      <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto py-8">
         <ExpedienteForm onSubmit={handleSubmit} />
       </div>
@@ -49,6 +51,7 @@ export default function NuevoExpediente() {
         cancelText={modal.cancelText}
         onConfirm={modal.onConfirm}
       />
-    </div>
+      </div>
+    </ProtectedRoute>
   );
 }

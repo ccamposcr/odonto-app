@@ -31,19 +31,31 @@ export default async function handler(req, res) {
       
       const { tratamientos, ...expedienteData } = data;
       
+      // Get all active medical fields from the database
+      const medicalFields = db.prepare(`
+        SELECT field_key FROM medical_history_fields 
+        WHERE is_active = 1
+        ORDER BY display_order ASC
+      `).all();
+      
+      // Build dynamic SQL query
+      const baseFields = ['paciente', 'encargado', 'fecha_nacimiento', 'edad', 'sexo', 
+                         'telefono', 'direccion', 'contacto_emergencia', 'email'];
+      
+      const medicalFieldNames = medicalFields.map(field => field.field_key);
+      const allFields = [...baseFields, ...medicalFieldNames, 'firma_paciente', 'odontogram_data', 'updated_at'];
+      
+      const setClause = allFields.map(field => 
+        field === 'updated_at' ? `${field} = CURRENT_TIMESTAMP` : `${field} = ?`
+      ).join(', ');
+      
       const stmt = db.prepare(`
-        UPDATE expedientes SET
-          paciente = ?, encargado = ?, fecha_nacimiento = ?, edad = ?, sexo = ?, 
-          telefono = ?, direccion = ?, contacto_emergencia = ?, email = ?,
-          problemas_cardiacos = ?, enfermedades_rinon = ?, enfermedades_higado = ?, 
-          diabetes = ?, hipertension = ?, epilepsia = ?, problemas_nerviosos = ?,
-          problemas_hemorragicos = ?, tomando_medicamentos = ?, alergia_medicamento = ?,
-          alergia_anestesia_dental = ?, embarazada = ?, problemas_tratamiento_dental = ?,
-          firma_paciente = ?, odontogram_data = ?, updated_at = CURRENT_TIMESTAMP
+        UPDATE expedientes SET ${setClause}
         WHERE id = ?
       `);
       
-      const result = stmt.run(
+      // Prepare values array (excluding updated_at since it's handled separately)
+      const values = [
         expedienteData.paciente?.toString().trim(),
         expedienteData.encargado?.toString().trim() || null,
         expedienteData.fecha_nacimiento || null,
@@ -53,23 +65,14 @@ export default async function handler(req, res) {
         expedienteData.direccion?.toString().trim() || null,
         expedienteData.contacto_emergencia?.toString().trim() || null,
         expedienteData.email?.toString().trim() || null,
-        expedienteData.problemas_cardiacos ? 1 : 0,
-        expedienteData.enfermedades_rinon ? 1 : 0,
-        expedienteData.enfermedades_higado ? 1 : 0,
-        expedienteData.diabetes ? 1 : 0,
-        expedienteData.hipertension ? 1 : 0,
-        expedienteData.epilepsia ? 1 : 0,
-        expedienteData.problemas_nerviosos ? 1 : 0,
-        expedienteData.problemas_hemorragicos ? 1 : 0,
-        expedienteData.tomando_medicamentos ? 1 : 0,
-        expedienteData.alergia_medicamento ? 1 : 0,
-        expedienteData.alergia_anestesia_dental ? 1 : 0,
-        expedienteData.embarazada ? 1 : 0,
-        expedienteData.problemas_tratamiento_dental ? 1 : 0,
+        // Add medical field values dynamically
+        ...medicalFieldNames.map(fieldKey => expedienteData[fieldKey] ? 1 : 0),
         expedienteData.firma_paciente || null,
         expedienteData.odontogram_data || '{}',
         id
-      );
+      ];
+      
+      const result = stmt.run(...values);
       
       if (result.changes === 0) {
         return res.status(404).json({ error: 'Expediente not found' });

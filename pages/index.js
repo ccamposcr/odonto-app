@@ -2,12 +2,15 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import Modal from '../components/Modal';
+import ProtectedRoute from '../components/ProtectedRoute';
 import useModal from '../hooks/useModal';
+import { useAuth } from '../hooks/useAuth';
 
 export default function Home() {
   const [expedientes, setExpedientes] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const { modal, closeModal, showConfirm, showSuccess, showError } = useModal();
+  const { user, logout, isAdmin } = useAuth();
 
   useEffect(() => {
     fetchExpedientes();
@@ -85,7 +88,8 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gray-50">
       <header className="bg-dental-teal text-white p-4 md:p-6">
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
@@ -105,14 +109,35 @@ export default function Home() {
                 <p className="text-xs md:text-sm text-dental-teal-100">DRA. LAURA CAMPOS - UCR</p>
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
-              <Link href="/expediente/nuevo" className="btn !bg-emerald-700 text-white hover:!bg-emerald-800 w-full sm:w-auto text-center font-semibold shadow-md transition-all">
-                <span className="inline sm:hidden">+ Nuevo</span>
-                <span className="hidden sm:inline">Nuevo Expediente</span>
-              </Link>
-              <Link href="/admin/configuracion" className="btn btn-secondary w-full sm:w-auto text-center text-xs">
-                Configuración
-              </Link>
+            <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-3">
+              {/* Usuario info */}
+              <div className="text-right text-sm">
+                <p className="text-dental-teal-100">Bienvenido, {user?.fullName}</p>
+                <p className="text-dental-teal-200 text-xs capitalize">{user?.role === 'admin' ? 'Administrador' : 'Usuario'}</p>
+              </div>
+              
+              {/* Botones de acción - solo admin puede crear expedientes */}
+              {isAdmin() && (
+                <Link href="/expediente/nuevo" className="btn !bg-emerald-700 text-white hover:!bg-emerald-800 w-full sm:w-auto text-center font-semibold shadow-md transition-all">
+                  <span className="inline sm:hidden">+ Nuevo</span>
+                  <span className="hidden sm:inline">Nuevo Expediente</span>
+                </Link>
+              )}
+              
+              {/* Configuración - solo admin */}
+              {isAdmin() && (
+                <Link href="/admin/configuracion" className="btn btn-secondary w-full sm:w-auto text-center text-xs">
+                  Configuración
+                </Link>
+              )}
+              
+              {/* Botón de logout */}
+              <button
+                onClick={logout}
+                className="btn btn-outline border-dental-teal-200 text-dental-teal-100 hover:bg-dental-teal-200 hover:text-dental-dark-teal w-full sm:w-auto text-xs"
+              >
+                Cerrar Sesión
+              </button>
             </div>
           </div>
         </div>
@@ -301,6 +326,7 @@ export default function Home() {
         cancelText={modal.cancelText}
         onConfirm={modal.onConfirm}
       />
-    </div>
+      </div>
+    </ProtectedRoute>
   );
 }
