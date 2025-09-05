@@ -134,7 +134,34 @@ export default function VerExpediente() {
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto py-4 md:py-8 px-3 md:px-0">
+        {/* Header */}
+        <header className="bg-dental-teal text-white shadow-lg">
+          <div className="max-w-6xl mx-auto px-3 md:px-6 py-4">
+            <div className="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
+              <div className="flex items-center space-x-3 md:space-x-4">
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-full flex items-center justify-center overflow-hidden">
+                  <Image
+                    src="/images/dental-logo.png"
+                    alt="Clínica Dental Logo"
+                    width={48}
+                    height={48}
+                    priority
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+                <div>
+                  <h1 className="text-xl md:text-2xl font-bold">Expediente Clínico - {expediente.paciente}</h1>
+                  <p className="text-xs md:text-sm text-dental-teal-100">DRA. LAURA CAMPOS - UCR | ID: {expediente.id}</p>
+                </div>
+              </div>
+              <Link href="/" className="btn !bg-emerald-700 text-white hover:!bg-emerald-800 w-full sm:w-auto text-center font-semibold shadow-md transition-all">
+                Volver al Inicio
+              </Link>
+            </div>
+          </div>
+        </header>
+
+        <main className="max-w-4xl mx-auto py-4 md:py-8 px-3 md:px-0">
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           <div className="dental-header">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
@@ -190,7 +217,7 @@ export default function VerExpediente() {
                   </button>
                 )}
                 <Link href="/" className="btn btn-secondary w-full sm:w-auto text-center">
-                  Volver
+                  Inicio
                 </Link>
               </div>
             </div>
@@ -344,18 +371,18 @@ export default function VerExpediente() {
             </div>
           </div>
         </div>
-      </div>
+        </main>
 
-      <Modal
-        isOpen={modal.isOpen}
-        onClose={closeModal}
-        title={modal.title}
-        message={modal.message}
-        type={modal.type}
-        confirmText={modal.confirmText}
-        cancelText={modal.cancelText}
-        onConfirm={modal.onConfirm}
-      />
+        <Modal
+          isOpen={modal.isOpen}
+          onClose={closeModal}
+          title={modal.title}
+          message={modal.message}
+          type={modal.type}
+          confirmText={modal.confirmText}
+          cancelText={modal.cancelText}
+          onConfirm={modal.onConfirm}
+        />
       </div>
     </ProtectedRoute>
   );

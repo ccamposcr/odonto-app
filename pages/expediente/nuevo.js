@@ -1,4 +1,6 @@
 import { useRouter } from 'next/router';
+import Link from 'next/link';
+import Image from 'next/image';
 import ExpedienteForm from '../../components/ExpedienteForm';
 import Modal from '../../components/Modal';
 import ProtectedRoute from '../../components/ProtectedRoute';
@@ -37,9 +39,36 @@ export default function NuevoExpediente() {
   return (
     <ProtectedRoute adminOnly={true}>
       <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto py-8">
-        <ExpedienteForm onSubmit={handleSubmit} />
-      </div>
+        {/* Header */}
+        <header className="bg-dental-teal text-white shadow-lg">
+          <div className="max-w-6xl mx-auto px-3 md:px-6 py-4">
+            <div className="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
+              <div className="flex items-center space-x-3 md:space-x-4">
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-full flex items-center justify-center overflow-hidden">
+                  <Image
+                    src="/images/dental-logo.png"
+                    alt="Clínica Dental Logo"
+                    width={48}
+                    height={48}
+                    priority
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+                <div>
+                  <h1 className="text-xl md:text-2xl font-bold">Nuevo Expediente</h1>
+                  <p className="text-xs md:text-sm text-dental-teal-100">DRA. LAURA CAMPOS - UCR</p>
+                </div>
+              </div>
+              <Link href="/" className="btn !bg-emerald-700 text-white hover:!bg-emerald-800 w-full sm:w-auto text-center font-semibold shadow-md transition-all">
+                Volver al Inicio
+              </Link>
+            </div>
+          </div>
+        </header>
+
+        <main className="max-w-4xl mx-auto py-8">
+          <ExpedienteForm onSubmit={handleSubmit} />
+        </main>
 
       <Modal
         isOpen={modal.isOpen}
