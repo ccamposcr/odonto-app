@@ -51,7 +51,20 @@ export default function CitasPage() {
 
   useEffect(() => {
     fetchCitas();
+    fetchBlockedDays();
   }, [fechaSeleccionada, vistaCalendario]);
+
+  const fetchBlockedDays = async () => {
+    try {
+      const response = await fetch('/api/blocked-days');
+      if (response.ok) {
+        const blockedDatesArray = await response.json();
+        setBlockedDays(new Set(blockedDatesArray));
+      }
+    } catch (error) {
+      console.error('Error fetching blocked days:', error);
+    }
+  };
 
   const fetchCitas = async () => {
     try {
@@ -201,7 +214,7 @@ export default function CitasPage() {
   const handleCancelAppointment = (appointment) => {
     showConfirm(
       'Cancelar Cita',
-      `¿Está seguro que desea cancelar la cita con ${appointment.paciente}?\\n\\nFecha: ${formatDate(appointment.fecha)}\\nHora: ${appointment.hora_inicio} - ${appointment.hora_fin}`,
+      `¿Está seguro que desea cancelar la cita con ${appointment.paciente}?\n\nFecha: ${formatDate(appointment.fecha)}\nHora: ${appointment.hora_inicio} - ${appointment.hora_fin}`,
       async () => {
         try {
           const response = await fetch(`/api/citas/${appointment.id}`, {
@@ -292,20 +305,57 @@ export default function CitasPage() {
     setFechaSeleccionada(newDate);
   };
 
-  const toggleDayBlock = (date) => {
+  const toggleDayBlock = async (date) => {
     const dateStr = date.getFullYear() + '-' + 
       String(date.getMonth() + 1).padStart(2, '0') + '-' + 
       String(date.getDate()).padStart(2, '0');
     
-    setBlockedDays(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(dateStr)) {
-        newSet.delete(dateStr);
+    const isCurrentlyBlocked = blockedDays.has(dateStr);
+    
+    try {
+      if (isCurrentlyBlocked) {
+        // Desbloquear día
+        const response = await fetch('/api/blocked-days', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fecha: dateStr })
+        });
+        
+        if (response.ok) {
+          setBlockedDays(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(dateStr);
+            return newSet;
+          });
+          showSuccess('Día desbloqueado', 'El día se desbloqueó exitosamente');
+        } else {
+          const errorData = await response.json();
+          showError('Error', errorData.error || 'Error al desbloquear el día');
+        }
       } else {
-        newSet.add(dateStr);
+        // Bloquear día
+        const response = await fetch('/api/blocked-days', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fecha: dateStr })
+        });
+        
+        if (response.ok) {
+          setBlockedDays(prev => {
+            const newSet = new Set(prev);
+            newSet.add(dateStr);
+            return newSet;
+          });
+          showSuccess('Día bloqueado', 'El día se bloqueó exitosamente');
+        } else {
+          const errorData = await response.json();
+          showError('Error', errorData.error || 'Error al bloquear el día');
+        }
       }
-      return newSet;
-    });
+    } catch (error) {
+      console.error('Error toggling day block:', error);
+      showError('Error de conexión', 'Error al modificar el estado del día');
+    }
   };
 
   const isDayBlocked = (date) => {

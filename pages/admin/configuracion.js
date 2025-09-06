@@ -340,7 +340,7 @@ export default function ConfiguracionAdmin() {
   const deleteUser = async (userId) => {
     showConfirm(
       'Confirmar eliminación',
-      '¿Está seguro que desea eliminar este usuario?\\n\\nEsta acción no se puede deshacer.',
+      '¿Está seguro que desea eliminar este usuario?\n\nEsta acción no se puede deshacer.',
       async () => {
         try {
           const response = await fetch(`/api/auth/users?id=${userId}`, {
@@ -453,7 +453,7 @@ export default function ConfiguracionAdmin() {
   const deleteMedicalField = async (fieldId) => {
     showConfirm(
       'Confirmar eliminación',
-      '¿Está seguro que desea eliminar este campo?\\n\\nEsto afectará todos los expedientes existentes.',
+      '¿Está seguro que desea eliminar este campo?\n\nEsto afectará todos los expedientes existentes.',
       async () => {
         try {
           const response = await fetch(`/api/admin/medical-history-fields?id=${fieldId}`, {
@@ -562,7 +562,7 @@ export default function ConfiguracionAdmin() {
   const deleteTreatment = async (treatmentId) => {
     showConfirm(
       'Confirmar eliminación',
-      '¿Está seguro que desea eliminar este tratamiento?\\n\\nEsto afectará todos los expedientes existentes.',
+      '¿Está seguro que desea eliminar este tratamiento?\n\nEsto afectará todos los expedientes existentes.',
       async () => {
         try {
           const response = await fetch(`/api/admin/treatment-options?id=${treatmentId}`, {
