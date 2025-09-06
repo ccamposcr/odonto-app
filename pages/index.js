@@ -116,6 +116,12 @@ export default function Home() {
                 <p className="text-dental-teal-200 text-xs capitalize">{user?.role === 'admin' ? 'Administrador' : 'Usuario'}</p>
               </div>
               
+              {/* Gestión de Citas */}
+              <Link href="/citas" className="btn !bg-blue-600 text-white hover:!bg-blue-700 w-full sm:w-auto text-center font-semibold shadow-md transition-all">
+                <span className="inline sm:hidden">📅 Citas</span>
+                <span className="hidden sm:inline">Gestión de Citas</span>
+              </Link>
+
               {/* Botones de acción - solo admin puede crear expedientes */}
               {isAdmin() && (
                 <Link href="/expediente/nuevo" className="btn !bg-emerald-700 text-white hover:!bg-emerald-800 w-full sm:w-auto text-center font-semibold shadow-md transition-all">

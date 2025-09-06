@@ -128,7 +128,9 @@ body {
   font-size: 14px;
   font-weight: 500;
   text-decoration: none;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   transition: all 0.3s ease;
 }
