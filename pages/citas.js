@@ -44,6 +44,7 @@ export default function CitasPage() {
   const [showNewPatientForm, setShowNewPatientForm] = useState(false);
   const [newPatientData, setNewPatientData] = useState({ cedula: '', paciente: '' });
   const [editingAppointment, setEditingAppointment] = useState(null);
+  const [blockedDays, setBlockedDays] = useState(new Set()); // Set of blocked date strings (YYYY-MM-DD)
   const { modal, closeModal, showSuccess, showError, showConfirm } = useModal();
 
   useEffect(() => {
@@ -289,6 +290,29 @@ export default function CitasPage() {
     setFechaSeleccionada(newDate);
   };
 
+  const toggleDayBlock = (date) => {
+    const dateStr = date.getFullYear() + '-' + 
+      String(date.getMonth() + 1).padStart(2, '0') + '-' + 
+      String(date.getDate()).padStart(2, '0');
+    
+    setBlockedDays(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(dateStr)) {
+        newSet.delete(dateStr);
+      } else {
+        newSet.add(dateStr);
+      }
+      return newSet;
+    });
+  };
+
+  const isDayBlocked = (date) => {
+    const dateStr = date.getFullYear() + '-' + 
+      String(date.getMonth() + 1).padStart(2, '0') + '-' + 
+      String(date.getDate()).padStart(2, '0');
+    return blockedDays.has(dateStr);
+  };
+
   const getWeekDates = (date) => {
     const startOfWeek = new Date(date.getFullYear(), date.getMonth(), date.getDate());
     const day = startOfWeek.getDay();
@@ -321,6 +345,12 @@ export default function CitasPage() {
   };
 
   const handleTimeSlotClick = (fecha, hora) => {
+    // Verificar si el día está bloqueado
+    if (isDayBlocked(fecha)) {
+      showError('Día bloqueado', 'No se pueden agendar citas en días bloqueados');
+      return;
+    }
+
     const citasEnHora = getCitasForDateAndTime(fecha, hora);
     
     if (citasEnHora.length > 0) {
@@ -456,6 +486,7 @@ export default function CitasPage() {
               onTimeSlotClick={handleTimeSlotClick}
               onEditAppointment={openBookingModal}
               onCancelAppointment={handleCancelAppointment}
+              isDayBlocked={isDayBlocked}
             />
           )}
           
@@ -466,6 +497,8 @@ export default function CitasPage() {
               onTimeSlotClick={handleTimeSlotClick}
               onEditAppointment={openBookingModal}
               onCancelAppointment={handleCancelAppointment}
+              isDayBlocked={isDayBlocked}
+              toggleDayBlock={toggleDayBlock}
             />
           )}
           
@@ -477,6 +510,7 @@ export default function CitasPage() {
                 setFechaSeleccionada(date);
                 setVistaCalendario('dia');
               }}
+              isDayBlocked={isDayBlocked}
             />
           )}
 
@@ -518,11 +552,12 @@ export default function CitasPage() {
 }
 
 // Day View Component
-function DayView({ fecha, citas, onTimeSlotClick, onEditAppointment, onCancelAppointment }) {
+function DayView({ fecha, citas, onTimeSlotClick, onEditAppointment, onCancelAppointment, isDayBlocked }) {
   const fechaStr = fecha.getFullYear() + '-' + 
     String(fecha.getMonth() + 1).padStart(2, '0') + '-' + 
     String(fecha.getDate()).padStart(2, '0');
   const citasDelDia = citas.filter(cita => cita.fecha === fechaStr && cita.estado !== 'cancelada');
+  const isBlocked = isDayBlocked(fecha);
 
   const formatTime = (timeStr) => {
     const time24 = timeStr.substring(0, 5);
@@ -535,9 +570,10 @@ function DayView({ fecha, citas, onTimeSlotClick, onEditAppointment, onCancelApp
 
   return (
     <div className="bg-white rounded-lg shadow">
-      <div className="p-4 border-b">
-        <h3 className="text-lg font-semibold text-gray-800">
+      <div className={`p-4 border-b ${isBlocked ? 'bg-red-50' : ''}`}>
+        <h3 className={`text-lg font-semibold ${isBlocked ? 'text-red-700' : 'text-gray-800'}`}>
           {formatDate(fechaStr)}
+          {isBlocked && <span className="ml-2 text-sm font-medium text-red-600">- DÍA BLOQUEADO</span>}
         </h3>
       </div>
       <div className="p-4">
@@ -550,42 +586,54 @@ function DayView({ fecha, citas, onTimeSlotClick, onEditAppointment, onCancelApp
             return (
               <div 
                 key={hora}
-                className="flex items-center border-l-4 border-gray-200 hover:border-dental-teal hover:bg-gray-50 cursor-pointer transition-colors"
-                onClick={() => onTimeSlotClick(fecha, hora)}
+                className={`flex items-center border-l-4 transition-colors ${
+                  isBlocked 
+                    ? 'border-red-200 bg-red-50 cursor-not-allowed' 
+                    : 'border-gray-200 hover:border-dental-teal hover:bg-gray-50 cursor-pointer'
+                }`}
+                onClick={() => !isBlocked && onTimeSlotClick(fecha, hora)}
               >
-                <div className="w-20 text-sm text-gray-600 font-medium pl-3 flex-shrink-0">
+                <div className={`w-20 text-sm font-medium pl-3 flex-shrink-0 ${
+                  isBlocked ? 'text-red-400' : 'text-gray-600'
+                }`}>
                   {formatTime(hora)}
                 </div>
                 <div className="flex-1 min-h-[48px] flex items-center px-3">
-                  {citasEnHora.map(cita => (
-                    <div 
-                      key={cita.id}
-                      className="bg-dental-teal text-white rounded-md px-3 py-1 mr-2 text-sm flex items-center space-x-2"
-                    >
-                      <span>{cita.paciente}</span>
-                      <span className="text-xs">({cita.hora_inicio} - {cita.hora_fin})</span>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onEditAppointment(null, cita);
-                        }}
-                        className="text-white/80 hover:text-white"
-                      >
-                        <PencilIcon className="w-3 h-3" />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onCancelAppointment(cita);
-                        }}
-                        className="text-white/80 hover:text-white"
-                      >
-                        <XMarkIcon className="w-3 h-3" />
-                      </button>
-                    </div>
-                  ))}
-                  {citasEnHora.length === 0 && (
-                    <span className="text-gray-400 text-sm">Click para agendar cita</span>
+                  {isBlocked ? (
+                    <span className="text-red-500 text-sm font-medium">Día bloqueado</span>
+                  ) : (
+                    <>
+                      {citasEnHora.map(cita => (
+                        <div 
+                          key={cita.id}
+                          className="bg-dental-teal text-white rounded-md px-3 py-1 mr-2 text-sm flex items-center space-x-2"
+                        >
+                          <span>{cita.paciente}</span>
+                          <span className="text-xs">({cita.hora_inicio} - {cita.hora_fin})</span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onEditAppointment(null, cita);
+                            }}
+                            className="text-white/80 hover:text-white"
+                          >
+                            <PencilIcon className="w-3 h-3" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onCancelAppointment(cita);
+                            }}
+                            className="text-white/80 hover:text-white"
+                          >
+                            <XMarkIcon className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))}
+                      {citasEnHora.length === 0 && (
+                        <span className="text-gray-400 text-sm">Click para agendar cita</span>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
@@ -598,7 +646,7 @@ function DayView({ fecha, citas, onTimeSlotClick, onEditAppointment, onCancelApp
 }
 
 // Week View Component  
-function WeekView({ fechaSeleccionada, citas, onTimeSlotClick, onEditAppointment, onCancelAppointment }) {
+function WeekView({ fechaSeleccionada, citas, onTimeSlotClick, onEditAppointment, onCancelAppointment, isDayBlocked, toggleDayBlock }) {
   const weekDates = getWeekDates(fechaSeleccionada);
   
   const formatTime = (timeStr) => {
@@ -618,14 +666,33 @@ function WeekView({ fechaSeleccionada, citas, onTimeSlotClick, onEditAppointment
           <div className="p-3 text-sm font-medium text-gray-600"></div>
           {weekDates.map(date => {
             const isToday = date.toDateString() === new Date().toDateString();
+            const isBlocked = isDayBlocked(date);
             return (
-              <div key={date.toISOString()} className={`p-3 text-center border-l ${isToday ? 'bg-dental-teal bg-opacity-10 ring-2 ring-dental-teal ring-inset' : ''}`}>
-                <div className={`text-sm font-medium ${isToday ? 'text-dental-dark-teal' : 'text-gray-800'}`}>
+              <div 
+                key={date.toISOString()} 
+                className={`p-3 text-center border-l cursor-pointer hover:bg-opacity-20 transition-colors ${
+                  isBlocked ? 'bg-red-100 ring-2 ring-red-500 ring-inset' : 
+                  isToday ? 'bg-dental-teal bg-opacity-10 ring-2 ring-dental-teal ring-inset' : 
+                  'hover:bg-gray-100'
+                }`}
+                onClick={() => toggleDayBlock(date)}
+                title={isBlocked ? 'Día bloqueado - Click para desbloquear' : 'Click para bloquear día'}
+              >
+                <div className={`text-sm font-medium ${
+                  isBlocked ? 'text-red-700' :
+                  isToday ? 'text-dental-dark-teal' : 'text-gray-800'
+                }`}>
                   {date.toLocaleDateString('es-ES', { weekday: 'short' }).toUpperCase()}
                 </div>
-                <div className={`text-lg font-semibold mt-1 ${isToday ? 'text-dental-dark-teal' : 'text-gray-800'}`}>
+                <div className={`text-lg font-semibold mt-1 ${
+                  isBlocked ? 'text-red-700' :
+                  isToday ? 'text-dental-dark-teal' : 'text-gray-800'
+                }`}>
                   {date.getDate()}
                 </div>
+                {isBlocked && (
+                  <div className="text-xs text-red-600 mt-1 font-medium">BLOQUEADO</div>
+                )}
               </div>
             );
           })}
@@ -649,41 +716,51 @@ function WeekView({ fechaSeleccionada, citas, onTimeSlotClick, onEditAppointment
                   cita.estado !== 'cancelada'
                 );
                 const isToday = date.toDateString() === new Date().toDateString();
+                const isBlocked = isDayBlocked(date);
 
                 return (
                   <div 
                     key={date.toISOString()}
-                    className={`min-h-[40px] p-1 border-l hover:bg-gray-50 cursor-pointer ${isToday ? 'bg-dental-teal bg-opacity-5' : ''}`}
-                    onClick={() => onTimeSlotClick(date, hora)}
+                    className={`min-h-[40px] p-1 border-l ${
+                      isBlocked ? 'bg-red-50 cursor-not-allowed' :
+                      'hover:bg-gray-50 cursor-pointer'
+                    } ${isToday && !isBlocked ? 'bg-dental-teal bg-opacity-5' : ''}`}
+                    onClick={() => !isBlocked && onTimeSlotClick(date, hora)}
                   >
-                    {citasEnHora.map(cita => (
-                      <div 
-                        key={cita.id}
-                        className="bg-dental-teal text-white rounded px-1 py-0.5 text-xs flex items-center justify-between"
-                      >
-                        <span className="truncate">{cita.paciente}</span>
-                        <div className="flex space-x-1 ml-1">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onEditAppointment(null, cita);
-                            }}
-                            className="text-white/80 hover:text-white"
-                          >
-                            <PencilIcon className="w-3 h-3" />
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onCancelAppointment(cita);
-                            }}
-                            className="text-white/80 hover:text-white"
-                          >
-                            <XMarkIcon className="w-3 h-3" />
-                          </button>
-                        </div>
+                    {isBlocked ? (
+                      <div className="text-xs text-red-500 font-medium text-center py-2">
+                        DÍA BLOQUEADO
                       </div>
-                    ))}
+                    ) : (
+                      citasEnHora.map(cita => (
+                        <div 
+                          key={cita.id}
+                          className="bg-dental-teal text-white rounded px-1 py-0.5 text-xs flex items-center justify-between"
+                        >
+                          <span className="truncate">{cita.paciente}</span>
+                          <div className="flex space-x-1 ml-1">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onEditAppointment(null, cita);
+                              }}
+                              className="text-white/80 hover:text-white"
+                            >
+                              <PencilIcon className="w-3 h-3" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onCancelAppointment(cita);
+                              }}
+                              className="text-white/80 hover:text-white"
+                            >
+                              <XMarkIcon className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
                 );
               })}
@@ -696,7 +773,7 @@ function WeekView({ fechaSeleccionada, citas, onTimeSlotClick, onEditAppointment
 }
 
 // Month View Component
-function MonthView({ fechaSeleccionada, citas, onDateClick }) {
+function MonthView({ fechaSeleccionada, citas, onDateClick, isDayBlocked }) {
   const year = fechaSeleccionada.getFullYear();
   const month = fechaSeleccionada.getMonth();
   
@@ -739,6 +816,7 @@ function MonthView({ fechaSeleccionada, citas, onDateClick }) {
           {calendarDays.map(date => {
             const isCurrentMonth = date.getMonth() === month;
             const isToday = date.toDateString() === new Date().toDateString();
+            const isBlocked = isDayBlocked(date);
             const citasDelDia = getCitasForDate(date);
             
             return (
@@ -746,25 +824,36 @@ function MonthView({ fechaSeleccionada, citas, onDateClick }) {
                 key={date.toISOString()}
                 className={`min-h-[100px] p-2 border rounded cursor-pointer hover:bg-gray-50 ${
                   isCurrentMonth ? 'bg-white' : 'bg-gray-50 text-gray-400'
-                } ${isToday ? 'ring-2 ring-dental-teal' : ''}`}
+                } ${
+                  isBlocked ? 'ring-2 ring-red-500 bg-red-50' :
+                  isToday ? 'ring-2 ring-dental-teal' : ''
+                }`}
                 onClick={() => onDateClick(date)}
               >
-                <div className="text-sm font-medium mb-1">
+                <div className={`text-sm font-medium mb-1 ${isBlocked ? 'text-red-700' : ''}`}>
                   {date.getDate()}
                 </div>
                 <div className="space-y-1">
-                  {citasDelDia.slice(0, 3).map(cita => (
-                    <div 
-                      key={cita.id}
-                      className="text-xs bg-dental-teal text-white rounded px-1 py-0.5 truncate"
-                    >
-                      {cita.hora_inicio} {cita.paciente}
+                  {isBlocked ? (
+                    <div className="text-xs text-red-600 font-medium text-center">
+                      BLOQUEADO
                     </div>
-                  ))}
-                  {citasDelDia.length > 3 && (
-                    <div className="text-xs text-gray-500">
-                      +{citasDelDia.length - 3} más
-                    </div>
+                  ) : (
+                    <>
+                      {citasDelDia.slice(0, 3).map(cita => (
+                        <div 
+                          key={cita.id}
+                          className="text-xs bg-dental-teal text-white rounded px-1 py-0.5 truncate"
+                        >
+                          {cita.hora_inicio} {cita.paciente}
+                        </div>
+                      ))}
+                      {citasDelDia.length > 3 && (
+                        <div className="text-xs text-gray-500">
+                          +{citasDelDia.length - 3} más
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
