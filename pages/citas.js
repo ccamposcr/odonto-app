@@ -47,12 +47,74 @@ export default function CitasPage() {
   const [editingAppointment, setEditingAppointment] = useState(null);
   const [blockedDays, setBlockedDays] = useState(new Set()); // Set of blocked date strings (YYYY-MM-DD)
   const [reschedulingAppointment, setReschedulingAppointment] = useState(null); // Appointment being rescheduled
+  const [lastSyncTime, setLastSyncTime] = useState(null);
   const { modal, closeModal, showSuccess, showError, showConfirm } = useModal();
 
   useEffect(() => {
     fetchCitas();
     fetchBlockedDays();
   }, [fechaSeleccionada, vistaCalendario]);
+
+  // Sincronización entre ventanas locales
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'citas-updated') {
+        fetchCitas();
+      } else if (e.key === 'blocked-days-updated') {
+        fetchBlockedDays();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  // Sincronización entre computadoras (polling cada 30 segundos)
+  useEffect(() => {
+    const checkForUpdates = async () => {
+      try {
+        const response = await fetch('/api/sync-status');
+        if (response.ok) {
+          const syncData = await response.json();
+          
+          if (lastSyncTime) {
+            const citasNeedUpdate = syncData.citas_last_update && 
+              new Date(syncData.citas_last_update) > new Date(lastSyncTime.citas || 0);
+            
+            const blockedDaysNeedUpdate = syncData.blocked_days_last_update && 
+              new Date(syncData.blocked_days_last_update) > new Date(lastSyncTime.blocked_days || 0);
+            
+            if (citasNeedUpdate) {
+              fetchCitas();
+            }
+            
+            if (blockedDaysNeedUpdate) {
+              fetchBlockedDays();
+            }
+          }
+          
+          setLastSyncTime({
+            citas: syncData.citas_last_update,
+            blocked_days: syncData.blocked_days_last_update,
+            server_time: syncData.server_time
+          });
+        }
+      } catch (error) {
+        console.error('Error checking for updates:', error);
+      }
+    };
+
+    // Verificar inmediatamente
+    checkForUpdates();
+    
+    // Luego verificar cada 30 segundos
+    const interval = setInterval(checkForUpdates, 30000);
+    
+    return () => clearInterval(interval);
+  }, [lastSyncTime]);
 
   const fetchBlockedDays = async () => {
     try {
@@ -64,6 +126,14 @@ export default function CitasPage() {
     } catch (error) {
       console.error('Error fetching blocked days:', error);
     }
+  };
+
+  // Función para notificar cambios a otras ventanas
+  const notifyChange = (type) => {
+    const timestamp = Date.now();
+    localStorage.setItem(type, timestamp.toString());
+    // Remover inmediatamente para que se pueda disparar de nuevo
+    setTimeout(() => localStorage.removeItem(type), 100);
   };
 
   const fetchCitas = async () => {
@@ -201,6 +271,7 @@ export default function CitasPage() {
         );
         closeBookingModal();
         fetchCitas();
+        notifyChange('citas-updated');
       } else {
         const errorData = await response.json();
         showError('Error', errorData.error || 'Error al procesar la cita');
@@ -224,6 +295,7 @@ export default function CitasPage() {
           if (response.ok) {
             showSuccess('Cita cancelada', 'La cita se canceló exitosamente');
             fetchCitas();
+            notifyChange('citas-updated');
           } else {
             const errorData = await response.json();
             showError('Error', errorData.error || 'Error al cancelar la cita');
@@ -328,6 +400,7 @@ export default function CitasPage() {
             return newSet;
           });
           showSuccess('Día desbloqueado', 'El día se desbloqueó exitosamente');
+          notifyChange('blocked-days-updated');
         } else {
           const errorData = await response.json();
           showError('Error', errorData.error || 'Error al desbloquear el día');
@@ -347,6 +420,7 @@ export default function CitasPage() {
             return newSet;
           });
           showSuccess('Día bloqueado', 'El día se bloqueó exitosamente');
+          notifyChange('blocked-days-updated');
         } else {
           const errorData = await response.json();
           showError('Error', errorData.error || 'Error al bloquear el día');
@@ -395,6 +469,7 @@ export default function CitasPage() {
         showSuccess('Cita reagendada', 'La cita se movió exitosamente a la nueva fecha y hora');
         setReschedulingAppointment(null);
         fetchCitas();
+        notifyChange('citas-updated');
       } else {
         const errorData = await response.json();
         showError('Error', errorData.error || 'Error al reagendar la cita');
