@@ -90,60 +90,86 @@ export default function Home() {
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gray-50">
-      <header className="bg-dental-teal text-white p-4 md:p-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
-            <div className="flex items-center space-x-3 md:space-x-4">
-              <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-full flex items-center justify-center overflow-hidden">
-                <Image
-                  src="/images/dental-logo.png"
-                  alt="Clínica Dental Logo"
-                  width={48}
-                  height={48}
-                  priority
-                  className="w-full h-full object-contain"
-                />
+      <header className="bg-dental-teal text-white">
+        {/* Header principal */}
+        <div className="p-4 md:p-6">
+          <div className="max-w-6xl mx-auto">
+            <div className="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
+              <div className="flex items-center space-x-3 md:space-x-4">
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-full flex items-center justify-center overflow-hidden">
+                  <Image
+                    src="/images/dental-logo.png"
+                    alt="Clínica Dental Logo"
+                    width={48}
+                    height={48}
+                    priority
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+                <div>
+                  <h1 className="text-xl md:text-2xl font-bold">Clínica Dental</h1>
+                  <p className="text-xs md:text-sm text-dental-teal-100">DRA. LAURA CAMPOS - UCR</p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-xl md:text-2xl font-bold">Clínica Dental</h1>
-                <p className="text-xs md:text-sm text-dental-teal-100">DRA. LAURA CAMPOS - UCR</p>
+              <div className="flex items-center space-x-3">
+                {/* Usuario info */}
+                <div className="text-right text-sm hidden sm:block">
+                  <p className="text-dental-teal-100">Bienvenido, {user?.fullName}</p>
+                  <p className="text-dental-teal-200 text-xs capitalize">{user?.role === 'admin' ? 'Administrador' : 'Usuario'}</p>
+                </div>
+                
+                {/* Botón de logout */}
+                <button
+                  onClick={logout}
+                  className="btn btn-outline border-dental-teal-200 text-dental-teal-100 hover:bg-dental-teal-200 hover:text-dental-dark-teal text-xs"
+                >
+                  Cerrar Sesión
+                </button>
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-3">
-              {/* Usuario info */}
-              <div className="text-right text-sm">
+          </div>
+        </div>
+
+        {/* Barra de botones de acción */}
+        <div className="bg-dental-teal-600 border-t border-dental-teal-400">
+          <div className="max-w-6xl mx-auto px-4 md:px-6 py-3">
+            <div className="flex flex-col sm:flex-row items-center justify-between space-y-3 sm:space-y-0">
+              {/* Usuario info para móvil */}
+              <div className="sm:hidden text-center text-sm">
                 <p className="text-dental-teal-100">Bienvenido, {user?.fullName}</p>
                 <p className="text-dental-teal-200 text-xs capitalize">{user?.role === 'admin' ? 'Administrador' : 'Usuario'}</p>
               </div>
-              
-              {/* Gestión de Citas */}
-              <Link href="/citas" className="btn !bg-blue-600 text-white hover:!bg-blue-700 w-full sm:w-auto text-center font-semibold shadow-md transition-all">
-                <span className="inline sm:hidden">📅 Citas</span>
-                <span className="hidden sm:inline">Gestión de Citas</span>
-              </Link>
 
-              {/* Botones de acción - solo admin puede crear expedientes */}
-              {isAdmin() && (
-                <Link href="/expediente/nuevo" className="btn !bg-emerald-700 text-white hover:!bg-emerald-800 w-full sm:w-auto text-center font-semibold shadow-md transition-all">
-                  <span className="inline sm:hidden">+ Nuevo</span>
-                  <span className="hidden sm:inline">Nuevo Expediente</span>
+              {/* Botones de acción */}
+              <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-3 w-full sm:w-auto">
+                {/* Gestión de Citas */}
+                <Link href="/citas" className="btn !bg-blue-600 text-white hover:!bg-blue-700 w-full sm:w-auto text-center font-semibold shadow-md transition-all flex items-center justify-center">
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  Gestión de Citas
                 </Link>
-              )}
-              
-              {/* Configuración - solo admin */}
-              {isAdmin() && (
-                <Link href="/admin/configuracion" className="btn btn-secondary w-full sm:w-auto text-center text-xs">
-                  Configuración
-                </Link>
-              )}
-              
-              {/* Botón de logout */}
-              <button
-                onClick={logout}
-                className="btn btn-outline border-dental-teal-200 text-dental-teal-100 hover:bg-dental-teal-200 hover:text-dental-dark-teal w-full sm:w-auto text-xs"
-              >
-                Cerrar Sesión
-              </button>
+
+                {/* Botones de admin */}
+                {isAdmin() && (
+                  <>
+                    <Link href="/expediente/nuevo" className="btn !bg-emerald-600 text-white hover:!bg-emerald-700 w-full sm:w-auto text-center font-semibold shadow-md transition-all flex items-center justify-center">
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                      Nuevo Expediente
+                    </Link>
+                    
+                    <Link href="/admin/configuracion" className="btn !bg-gray-600 text-white hover:!bg-gray-700 w-full sm:w-auto text-center font-medium shadow-md transition-all flex items-center justify-center">
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      Configuración
+                    </Link>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>
