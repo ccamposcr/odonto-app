@@ -48,6 +48,9 @@ export default function CitasPage() {
   const [blockedDays, setBlockedDays] = useState(new Set()); // Set of blocked date strings (YYYY-MM-DD)
   const [reschedulingAppointment, setReschedulingAppointment] = useState(null); // Appointment being rescheduled
   const [lastSyncTime, setLastSyncTime] = useState(null);
+  const [showBlockDayModal, setShowBlockDayModal] = useState(false);
+  const [dayToBlock, setDayToBlock] = useState(null);
+  const [citasToReschedule, setCitasToReschedule] = useState([]);
   const { modal, closeModal, showSuccess, showError, showConfirm } = useModal();
 
   useEffect(() => {
@@ -387,49 +390,115 @@ export default function CitasPage() {
     try {
       if (isCurrentlyBlocked) {
         // Desbloquear día
-        const response = await fetch('/api/blocked-days', {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ fecha: dateStr })
-        });
-        
-        if (response.ok) {
-          setBlockedDays(prev => {
-            const newSet = new Set(prev);
-            newSet.delete(dateStr);
-            return newSet;
-          });
-          showSuccess('Día desbloqueado', 'El día se desbloqueó exitosamente');
-          notifyChange('blocked-days-updated');
-        } else {
-          const errorData = await response.json();
-          showError('Error', errorData.error || 'Error al desbloquear el día');
-        }
+        await unblockDay(dateStr);
       } else {
-        // Bloquear día
-        const response = await fetch('/api/blocked-days', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ fecha: dateStr })
-        });
+        // Verificar si hay citas ese día antes de bloquear
+        const citasDelDia = citas.filter(cita => 
+          cita.fecha === dateStr && cita.estado !== 'cancelada'
+        );
         
-        if (response.ok) {
-          setBlockedDays(prev => {
-            const newSet = new Set(prev);
-            newSet.add(dateStr);
-            return newSet;
-          });
-          showSuccess('Día bloqueado', 'El día se bloqueó exitosamente');
-          notifyChange('blocked-days-updated');
+        if (citasDelDia.length > 0) {
+          // Hay citas ese día, mostrar modal para reagendar
+          setDayToBlock(date);
+          setCitasToReschedule(citasDelDia);
+          setShowBlockDayModal(true);
         } else {
-          const errorData = await response.json();
-          showError('Error', errorData.error || 'Error al bloquear el día');
+          // No hay citas, proceder a bloquear
+          await blockDay(dateStr);
         }
       }
     } catch (error) {
       console.error('Error toggling day block:', error);
       showError('Error de conexión', 'Error al modificar el estado del día');
     }
+  };
+
+  const blockDay = async (dateStr) => {
+    try {
+      const response = await fetch('/api/blocked-days', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fecha: dateStr })
+      });
+      
+      if (response.ok) {
+        setBlockedDays(prev => {
+          const newSet = new Set(prev);
+          newSet.add(dateStr);
+          return newSet;
+        });
+        showSuccess('Día bloqueado', 'El día se bloqueó exitosamente');
+        notifyChange('blocked-days-updated');
+      } else {
+        const errorData = await response.json();
+        showError('Error', errorData.error || 'Error al bloquear el día');
+      }
+    } catch (error) {
+      console.error('Error blocking day:', error);
+      showError('Error de conexión', 'Error al bloquear el día');
+    }
+  };
+
+  const unblockDay = async (dateStr) => {
+    try {
+      const response = await fetch('/api/blocked-days', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fecha: dateStr })
+      });
+      
+      if (response.ok) {
+        setBlockedDays(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(dateStr);
+          return newSet;
+        });
+        showSuccess('Día desbloqueado', 'El día se desbloqueó exitosamente');
+        notifyChange('blocked-days-updated');
+      } else {
+        const errorData = await response.json();
+        showError('Error', errorData.error || 'Error al desbloquear el día');
+      }
+    } catch (error) {
+      console.error('Error unblocking day:', error);
+      showError('Error de conexión', 'Error al desbloquear el día');
+    }
+  };
+
+  const handleRescheduleFromBlockModal = (appointment) => {
+    setReschedulingAppointment(appointment);
+    setShowBlockDayModal(false);
+    showSuccess('Modo reagendar activado', 'Haga clic en cualquier horario disponible para mover la cita');
+  };
+
+  const checkAndProceedWithBlock = async () => {
+    if (!dayToBlock) return;
+    
+    const dateStr = dayToBlock.getFullYear() + '-' + 
+      String(dayToBlock.getMonth() + 1).padStart(2, '0') + '-' + 
+      String(dayToBlock.getDate()).padStart(2, '0');
+    
+    // Verificar si aún hay citas pendientes
+    const remainingCitas = citas.filter(cita => 
+      cita.fecha === dateStr && cita.estado !== 'cancelada'
+    );
+    
+    if (remainingCitas.length === 0) {
+      // No hay más citas, proceder a bloquear
+      await blockDay(dateStr);
+      setShowBlockDayModal(false);
+      setDayToBlock(null);
+      setCitasToReschedule([]);
+    } else {
+      // Actualizar la lista de citas pendientes
+      setCitasToReschedule(remainingCitas);
+    }
+  };
+
+  const closeBlockDayModal = () => {
+    setShowBlockDayModal(false);
+    setDayToBlock(null);
+    setCitasToReschedule([]);
   };
 
   const isDayBlocked = (date) => {
@@ -470,6 +539,11 @@ export default function CitasPage() {
         setReschedulingAppointment(null);
         fetchCitas();
         notifyChange('citas-updated');
+        
+        // Si estamos reagendando para bloquear un día, verificar si podemos proceder
+        if (dayToBlock) {
+          setTimeout(() => checkAndProceedWithBlock(), 1000);
+        }
       } else {
         const errorData = await response.json();
         showError('Error', errorData.error || 'Error al reagendar la cita');
@@ -771,6 +845,15 @@ export default function CitasPage() {
           confirmText={modal.confirmText}
           cancelText={modal.cancelText}
           onConfirm={modal.onConfirm}
+        />
+
+        {/* Modal para bloquear día con citas */}
+        <BlockDayModal
+          isOpen={showBlockDayModal}
+          onClose={closeBlockDayModal}
+          dayToBlock={dayToBlock}
+          citasToReschedule={citasToReschedule}
+          onRescheduleAppointment={handleRescheduleFromBlockModal}
         />
       </div>
     </ProtectedRoute>
@@ -1341,4 +1424,93 @@ function formatDate(dateStr) {
     month: 'long',
     day: 'numeric'
   });
+}
+
+// Modal para bloquear día con citas
+function BlockDayModal({ isOpen, onClose, dayToBlock, citasToReschedule, onRescheduleAppointment }) {
+  if (!isOpen || !dayToBlock) return null;
+
+  const dateStr = dayToBlock.getFullYear() + '-' + 
+    String(dayToBlock.getMonth() + 1).padStart(2, '0') + '-' + 
+    String(dayToBlock.getDate()).padStart(2, '0');
+
+  const formatTime = (timeStr) => {
+    const time24 = timeStr.substring(0, 5);
+    const [hours, minutes] = time24.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+    return `${hour12}:${minutes} ${ampm}`;
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={onClose}></div>
+        
+        <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        
+        <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full sm:p-6">
+          <div className="mb-4">
+            <h3 className="text-lg leading-6 font-medium text-gray-900 mb-2">
+              Bloquear día con citas programadas
+            </h3>
+            
+            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+              <div className="flex">
+                <div className="ml-3">
+                  <p className="text-sm text-yellow-700">
+                    <strong>Fecha a bloquear:</strong> {formatDate(dateStr)}
+                  </p>
+                  <p className="text-sm text-yellow-700 mt-1">
+                    Este día tiene <strong>{citasToReschedule.length} cita{citasToReschedule.length !== 1 ? 's' : ''} programada{citasToReschedule.length !== 1 ? 's' : ''}</strong>. 
+                    Debe reagendar todas las citas antes de poder bloquear el día.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h4 className="font-medium text-gray-800 mb-3">Citas a reagendar:</h4>
+              {citasToReschedule.map(cita => (
+                <div key={cita.id} className="border rounded-lg p-4 bg-gray-50">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3">
+                        <div className="flex-1">
+                          <p className="font-medium text-gray-900">{cita.paciente}</p>
+                          <p className="text-sm text-gray-600">
+                            {formatTime(cita.hora_inicio)} - {formatTime(cita.hora_fin)}
+                          </p>
+                          {cita.notas && (
+                            <p className="text-sm text-gray-500 mt-1">{cita.notas}</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => onRescheduleAppointment(cita)}
+                      className="btn btn-primary flex items-center space-x-2"
+                    >
+                      <ArrowsRightLeftIcon className="w-4 h-4" />
+                      <span>Reagendar</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 mt-6">
+            <button
+              onClick={onClose}
+              className="btn btn-secondary flex-1"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
