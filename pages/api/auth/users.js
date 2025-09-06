@@ -1,4 +1,5 @@
 import { initDatabase } from '../../../lib/database';
+import { emitConfigUpdate } from '../../../lib/socketEmitter';
 
 export default function handler(req, res) {
   const db = initDatabase();
@@ -46,6 +47,9 @@ export default function handler(req, res) {
         SELECT id, username, full_name, role, is_active, created_at
         FROM users WHERE id = ?
       `).get(result.lastInsertRowid);
+      
+      // Emitir evento de actualización via Socket.IO
+      emitConfigUpdate(res);
       
       res.status(201).json(newUser);
 
@@ -112,6 +116,9 @@ export default function handler(req, res) {
         FROM users WHERE id = ?
       `).get(id);
       
+      // Emitir evento de actualización via Socket.IO
+      emitConfigUpdate(res);
+      
       res.status(200).json(updatedUser);
 
     } else if (req.method === 'DELETE') {
@@ -134,6 +141,9 @@ export default function handler(req, res) {
         return res.status(404).json({ error: 'User not found' });
       }
 
+      // Emitir evento de actualización via Socket.IO
+      emitConfigUpdate(res);
+      
       res.status(200).json({ message: 'User deleted successfully' });
 
     } else {

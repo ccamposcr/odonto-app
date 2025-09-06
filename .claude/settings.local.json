@@ -10,7 +10,8 @@
       "Bash(curl:*)",
       "Bash(PORT=3000 npm run dev)",
       "Bash(grep:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(time curl:*)"
     ],
     "deny": [],
     "ask": []

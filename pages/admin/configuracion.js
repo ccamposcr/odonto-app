@@ -23,6 +23,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import Modal from '../../components/Modal';
 import useModal from '../../hooks/useModal';
+import useSimpleSocket from '../../hooks/useSimpleSocket';
 
 // Sortable table row component
 function SortableTableRow({ field, editField, deleteField, toggleFieldStatus }) {
@@ -203,6 +204,15 @@ export default function ConfiguracionAdmin() {
     is_active: true
   });
   const { modal, closeModal, showConfirm, showSuccess, showError } = useModal();
+
+  // Configurar WebSocket para sincronización de configuración en tiempo real
+  const socket = useSimpleSocket({
+    'config-updated': () => {
+      fetchMedicalFields();
+      fetchTreatmentOptions();
+      fetchUsers();
+    }
+  });
 
   const sensors = useSensors(
     useSensor(PointerSensor),

@@ -1,4 +1,5 @@
 const { initDatabase } = require('../../../lib/database');
+const { emitBlockedDaysUpdate } = require('../../../lib/socketEmitter');
 
 export default function handler(req, res) {
   const db = initDatabase();
@@ -28,6 +29,9 @@ export default function handler(req, res) {
       const insertStmt = db.prepare('INSERT INTO blocked_days (fecha) VALUES (?)');
       insertStmt.run(fecha);
       
+      // Emitir evento de actualización via Socket.IO
+      emitBlockedDaysUpdate(res);
+      
       res.status(201).json({ message: 'Día bloqueado exitosamente' });
     } catch (error) {
       console.error('Error blocking day:', error);
@@ -51,6 +55,9 @@ export default function handler(req, res) {
       if (result.changes === 0) {
         return res.status(404).json({ error: 'El día no estaba bloqueado' });
       }
+      
+      // Emitir evento de actualización via Socket.IO
+      emitBlockedDaysUpdate(res);
       
       res.status(200).json({ message: 'Día desbloqueado exitosamente' });
     } catch (error) {

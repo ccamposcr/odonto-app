@@ -1,4 +1,6 @@
 import { initDatabase } from '../../../lib/database';
+import { sendConfirmationEmail } from '../../../lib/emailService';
+import { emitCitasUpdate } from '../../../lib/socketEmitter';
 
 export default async function handler(req, res) {
   const { method } = req;
@@ -74,6 +76,27 @@ export default async function handler(req, res) {
       `);
 
       const result = stmt.run(expediente_id, fecha, hora_inicio, hora_fin, notas || null);
+
+      // Obtener información del paciente para el email
+      const citaCompleta = db.prepare(`
+        SELECT c.*, e.paciente, e.cedula, e.email
+        FROM citas c
+        JOIN expedientes e ON c.expediente_id = e.id
+        WHERE c.id = ?
+      `).get(result.lastInsertRowid);
+
+      // Enviar email de confirmación si el paciente tiene email
+      if (citaCompleta.email) {
+        try {
+          await sendConfirmationEmail(citaCompleta, false);
+        } catch (error) {
+          console.error('Error sending confirmation email:', error);
+          // No fallar la creación de la cita si el email falla
+        }
+      }
+
+      // Emitir evento de actualización via Socket.IO
+      emitCitasUpdate(res);
 
       return res.status(200).json({ 
         id: result.lastInsertRowid,

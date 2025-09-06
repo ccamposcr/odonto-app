@@ -1,4 +1,5 @@
 import { initDatabase } from '../../../lib/database';
+import { emitExpedientesUpdate } from '../../../lib/socketEmitter';
 
 export default async function handler(req, res) {
   const { method, query } = req;
@@ -130,6 +131,9 @@ export default async function handler(req, res) {
         }
       }
 
+      // Emitir evento de actualización via Socket.IO
+      emitExpedientesUpdate(res);
+
       return res.status(200).json({ message: 'Expediente updated successfully' });
     }
 
@@ -147,6 +151,9 @@ export default async function handler(req, res) {
       if (result.changes === 0) {
         return res.status(404).json({ error: 'Expediente not found' });
       }
+
+      // Emitir evento de actualización via Socket.IO
+      emitExpedientesUpdate(res);
 
       return res.status(200).json({ message: 'Expediente archived successfully' });
     }

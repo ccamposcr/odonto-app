@@ -16,13 +16,16 @@ import {
 import ProtectedRoute from '../components/ProtectedRoute';
 import Modal from '../components/Modal';
 import useModal from '../hooks/useModal';
+import useSimpleSocket from '../hooks/useSimpleSocket';
 
 const ESTADOS_CITA = {
   'programada': { label: 'Programada', color: 'bg-blue-100 text-blue-800' },
   'confirmada': { label: 'Confirmada', color: 'bg-green-100 text-green-800' },
   'en_proceso': { label: 'En Proceso', color: 'bg-yellow-100 text-yellow-800' },
   'completada': { label: 'Completada', color: 'bg-emerald-100 text-emerald-800' },
-  'cancelada': { label: 'Cancelada', color: 'bg-red-100 text-red-800' }
+  'cancelada': { label: 'Cancelada', color: 'bg-red-100 text-red-800' },
+  'cancelacion_solicitada': { label: 'Cancelación Solicitada', color: 'bg-orange-100 text-orange-800' },
+  'reagendar_solicitado': { label: 'Reagendar Solicitado', color: 'bg-purple-100 text-purple-800' }
 };
 
 const HORAS_DIA = [
@@ -47,7 +50,6 @@ export default function CitasPage() {
   const [editingAppointment, setEditingAppointment] = useState(null);
   const [blockedDays, setBlockedDays] = useState(new Set()); // Set of blocked date strings (YYYY-MM-DD)
   const [reschedulingAppointment, setReschedulingAppointment] = useState(null); // Appointment being rescheduled
-  const [lastSyncTime, setLastSyncTime] = useState(null);
   const [showBlockDayModal, setShowBlockDayModal] = useState(false);
   const [dayToBlock, setDayToBlock] = useState(null);
   const [citasToReschedule, setCitasToReschedule] = useState([]);
@@ -75,49 +77,7 @@ export default function CitasPage() {
     };
   }, []);
 
-  // Sincronización entre computadoras (polling cada 30 segundos)
-  useEffect(() => {
-    const checkForUpdates = async () => {
-      try {
-        const response = await fetch('/api/sync-status');
-        if (response.ok) {
-          const syncData = await response.json();
-          
-          if (lastSyncTime) {
-            const citasNeedUpdate = syncData.citas_last_update && 
-              new Date(syncData.citas_last_update) > new Date(lastSyncTime.citas || 0);
-            
-            const blockedDaysNeedUpdate = syncData.blocked_days_last_update && 
-              new Date(syncData.blocked_days_last_update) > new Date(lastSyncTime.blocked_days || 0);
-            
-            if (citasNeedUpdate) {
-              fetchCitas();
-            }
-            
-            if (blockedDaysNeedUpdate) {
-              fetchBlockedDays();
-            }
-          }
-          
-          setLastSyncTime({
-            citas: syncData.citas_last_update,
-            blocked_days: syncData.blocked_days_last_update,
-            server_time: syncData.server_time
-          });
-        }
-      } catch (error) {
-        console.error('Error checking for updates:', error);
-      }
-    };
-
-    // Verificar inmediatamente
-    checkForUpdates();
-    
-    // Luego verificar cada 30 segundos
-    const interval = setInterval(checkForUpdates, 30000);
-    
-    return () => clearInterval(interval);
-  }, [lastSyncTime]);
+  // La sincronización en tiempo real ahora se maneja via WebSockets
 
   const fetchBlockedDays = async () => {
     try {
@@ -131,11 +91,10 @@ export default function CitasPage() {
     }
   };
 
-  // Función para notificar cambios a otras ventanas
+  // Función para notificar cambios a ventanas locales (mantenida para compatibilidad)
   const notifyChange = (type) => {
     const timestamp = Date.now();
     localStorage.setItem(type, timestamp.toString());
-    // Remover inmediatamente para que se pueda disparar de nuevo
     setTimeout(() => localStorage.removeItem(type), 100);
   };
 
@@ -166,6 +125,12 @@ export default function CitasPage() {
       setLoading(false);
     }
   };
+
+  // Configurar WebSocket para sincronización en tiempo real
+  const socket = useSimpleSocket({
+    'citas-updated': fetchCitas,
+    'blocked-days-updated': fetchBlockedDays
+  });
 
   const searchPatients = async (query) => {
     if (!query || query.trim().length < 2) {
@@ -917,8 +882,11 @@ function DayView({ fecha, citas, onTimeSlotClick, onEditAppointment, onCancelApp
                       {citasEnHora.map(cita => (
                         <div 
                           key={cita.id}
-                          className={`bg-dental-teal text-white rounded-md px-3 py-1 mr-2 text-sm flex items-center space-x-2 ${
-                            reschedulingAppointment?.id === cita.id ? 'ring-2 ring-yellow-400 bg-yellow-600' : ''
+                          className={`text-white rounded-md px-3 py-1 mr-2 text-sm flex items-center space-x-2 ${
+                            reschedulingAppointment?.id === cita.id ? 'ring-2 ring-yellow-400 bg-yellow-600' : 
+                            cita.estado === 'cancelacion_solicitada' ? 'bg-orange-600' :
+                            cita.estado === 'reagendar_solicitado' ? 'bg-purple-600' :
+                            'bg-dental-teal'
                           }`}
                         >
                           <span>{cita.paciente}</span>
@@ -1065,8 +1033,11 @@ function WeekView({ fechaSeleccionada, citas, onTimeSlotClick, onEditAppointment
                       citasEnHora.map(cita => (
                         <div 
                           key={cita.id}
-                          className={`bg-dental-teal text-white rounded px-1 py-0.5 text-xs flex items-center justify-between ${
-                            reschedulingAppointment?.id === cita.id ? 'ring-1 ring-yellow-400 bg-yellow-600' : ''
+                          className={`text-white rounded px-1 py-0.5 text-xs flex items-center justify-between ${
+                            reschedulingAppointment?.id === cita.id ? 'ring-1 ring-yellow-400 bg-yellow-600' : 
+                            cita.estado === 'cancelacion_solicitada' ? 'bg-orange-600' :
+                            cita.estado === 'reagendar_solicitado' ? 'bg-purple-600' :
+                            'bg-dental-teal'
                           }`}
                         >
                           <span className="truncate">{cita.paciente}</span>

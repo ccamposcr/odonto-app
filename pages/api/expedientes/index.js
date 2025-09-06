@@ -1,4 +1,5 @@
 import { initDatabase } from '../../../lib/database';
+import { emitExpedientesUpdate } from '../../../lib/socketEmitter';
 
 export default async function handler(req, res) {
   const { method } = req;
@@ -111,6 +112,9 @@ export default async function handler(req, res) {
           console.error('Error saving dental surface data:', error);
         }
       }
+
+      // Emitir evento de actualización via Socket.IO
+      emitExpedientesUpdate(res);
 
       return res.status(200).json({ 
         id: expedienteId, 

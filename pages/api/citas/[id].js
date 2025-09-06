@@ -1,4 +1,6 @@
 import { initDatabase } from '../../../lib/database';
+import { sendConfirmationEmail } from '../../../lib/emailService';
+import { emitCitasUpdate } from '../../../lib/socketEmitter';
 
 export default async function handler(req, res) {
   const { method, query: { id } } = req;
@@ -108,12 +110,45 @@ export default async function handler(req, res) {
       query += ' WHERE id = ?';
       params.push(id);
 
+      // Obtener datos originales para comparar si cambió fecha/hora
+      const citaOriginal = db.prepare(`
+        SELECT fecha, hora_inicio, hora_fin FROM citas WHERE id = ?
+      `).get(id);
+
       const stmt = db.prepare(query);
       const result = stmt.run(...params);
 
       if (result.changes === 0) {
         return res.status(404).json({ error: 'No se pudo actualizar la cita' });
       }
+
+      // Verificar si cambió fecha u hora para enviar email de reagendado
+      const fechaCambio = fecha && fecha !== citaOriginal.fecha;
+      const horaCambio = (hora_inicio && hora_inicio !== citaOriginal.hora_inicio) || 
+                        (hora_fin && hora_fin !== citaOriginal.hora_fin);
+
+      if (fechaCambio || horaCambio) {
+        // Obtener información actualizada del paciente para el email
+        const citaCompleta = db.prepare(`
+          SELECT c.*, e.paciente, e.cedula, e.email
+          FROM citas c
+          JOIN expedientes e ON c.expediente_id = e.id
+          WHERE c.id = ?
+        `).get(id);
+
+        // Enviar email de reagendado si el paciente tiene email
+        if (citaCompleta.email) {
+          try {
+            await sendConfirmationEmail(citaCompleta, true);
+          } catch (error) {
+            console.error('Error sending reschedule confirmation email:', error);
+            // No fallar la actualización si el email falla
+          }
+        }
+      }
+
+      // Emitir evento de actualización via Socket.IO
+      emitCitasUpdate(res);
 
       return res.status(200).json({ 
         message: 'Cita actualizada exitosamente' 
@@ -133,6 +168,9 @@ export default async function handler(req, res) {
       if (result.changes === 0) {
         return res.status(404).json({ error: 'Cita no encontrada' });
       }
+
+      // Emitir evento de actualización via Socket.IO
+      emitCitasUpdate(res);
 
       return res.status(200).json({ 
         message: 'Cita cancelada exitosamente' 

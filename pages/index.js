@@ -5,6 +5,7 @@ import Modal from '../components/Modal';
 import ProtectedRoute from '../components/ProtectedRoute';
 import useModal from '../hooks/useModal';
 import { useAuth } from '../hooks/useAuth';
+import useSimpleSocket from '../hooks/useSimpleSocket';
 
 export default function Home() {
   const [expedientes, setExpedientes] = useState([]);
@@ -25,6 +26,11 @@ export default function Home() {
       console.error('Error fetching expedientes:', error);
     }
   };
+
+  // Configurar WebSocket para sincronización de expedientes en tiempo real
+  const socket = useSimpleSocket({
+    'expedientes-updated': fetchExpedientes
+  });
 
   const filteredExpedientes = expedientes.filter(exp => 
     exp.paciente.toLowerCase().includes(searchTerm.trim().toLowerCase()) ||
