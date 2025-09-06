@@ -10,7 +10,8 @@ import {
   MagnifyingGlassIcon,
   UserPlusIcon,
   ChevronLeftIcon,
-  ChevronRightIcon
+  ChevronRightIcon,
+  ArrowsRightLeftIcon
 } from '@heroicons/react/24/outline';
 import ProtectedRoute from '../components/ProtectedRoute';
 import Modal from '../components/Modal';
@@ -45,6 +46,7 @@ export default function CitasPage() {
   const [newPatientData, setNewPatientData] = useState({ cedula: '', paciente: '' });
   const [editingAppointment, setEditingAppointment] = useState(null);
   const [blockedDays, setBlockedDays] = useState(new Set()); // Set of blocked date strings (YYYY-MM-DD)
+  const [reschedulingAppointment, setReschedulingAppointment] = useState(null); // Appointment being rescheduled
   const { modal, closeModal, showSuccess, showError, showConfirm } = useModal();
 
   useEffect(() => {
@@ -313,6 +315,46 @@ export default function CitasPage() {
     return blockedDays.has(dateStr);
   };
 
+  const handleRescheduleAppointment = (appointment) => {
+    setReschedulingAppointment(appointment);
+    showSuccess('Modo reagendar activado', 'Haga clic en cualquier horario disponible para mover la cita');
+  };
+
+  const cancelReschedule = () => {
+    setReschedulingAppointment(null);
+  };
+
+  const confirmReschedule = async (newDate, newHora) => {
+    if (!reschedulingAppointment) return;
+
+    try {
+      const horaFin = HORAS_DIA[HORAS_DIA.indexOf(newHora) + 1] || '18:30';
+      const response = await fetch(`/api/citas/${reschedulingAppointment.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          expediente_id: reschedulingAppointment.expediente_id,
+          fecha: newDate,
+          hora_inicio: newHora,
+          hora_fin: horaFin,
+          notas: reschedulingAppointment.notas || null
+        })
+      });
+
+      if (response.ok) {
+        showSuccess('Cita reagendada', 'La cita se movió exitosamente a la nueva fecha y hora');
+        setReschedulingAppointment(null);
+        fetchCitas();
+      } else {
+        const errorData = await response.json();
+        showError('Error', errorData.error || 'Error al reagendar la cita');
+      }
+    } catch (error) {
+      console.error('Error rescheduling appointment:', error);
+      showError('Error de conexión', 'Error al reagendar la cita');
+    }
+  };
+
   const getWeekDates = (date) => {
     const startOfWeek = new Date(date.getFullYear(), date.getMonth(), date.getDate());
     const day = startOfWeek.getDay();
@@ -345,7 +387,37 @@ export default function CitasPage() {
   };
 
   const handleTimeSlotClick = (fecha, hora) => {
-    // Verificar si el día está bloqueado
+    // Si estamos en modo reagendar
+    if (reschedulingAppointment) {
+      // Verificar si el día está bloqueado
+      if (isDayBlocked(fecha)) {
+        showError('Día bloqueado', 'No se puede reagendar a días bloqueados');
+        return;
+      }
+
+      // Verificar si ya hay una cita en esta hora
+      const citasEnHora = getCitasForDateAndTime(fecha, hora);
+      if (citasEnHora.length > 0) {
+        showError('Horario ocupado', 'Ya hay una cita programada en este horario');
+        return;
+      }
+
+      // Confirmar el reagendado
+      const fechaStr = fecha.getFullYear() + '-' + 
+        String(fecha.getMonth() + 1).padStart(2, '0') + '-' + 
+        String(fecha.getDate()).padStart(2, '0');
+      
+      showConfirm(
+        'Confirmar reagendado',
+        `¿Confirma mover la cita de ${reschedulingAppointment.paciente} a:\n\nFecha: ${formatDate(fechaStr)}\nHora: ${hora}?`,
+        () => confirmReschedule(fechaStr, hora),
+        'Confirmar',
+        'Cancelar'
+      );
+      return;
+    }
+
+    // Verificar si el día está bloqueado (modo normal)
     if (isDayBlocked(fecha)) {
       showError('Día bloqueado', 'No se pueden agendar citas en días bloqueados');
       return;
@@ -411,6 +483,31 @@ export default function CitasPage() {
         </header>
 
         <main className="max-w-7xl mx-auto p-3 md:p-6">
+          {/* Reschedule Mode Banner */}
+          {reschedulingAppointment && (
+            <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-4 rounded-r-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <ArrowsRightLeftIcon className="w-5 h-5 text-yellow-700 mr-2" />
+                  <div>
+                    <p className="text-sm font-medium text-yellow-800">
+                      Reagendando cita de: <span className="font-bold">{reschedulingAppointment.paciente}</span>
+                    </p>
+                    <p className="text-xs text-yellow-700">
+                      Haga clic en cualquier horario disponible para mover la cita
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={cancelReschedule}
+                  className="text-yellow-700 hover:text-yellow-900 font-medium text-sm"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Calendar Controls */}
           <div className="bg-white rounded-lg shadow mb-6 p-4">
             <div className="flex flex-col lg:flex-row items-center justify-between space-y-4 lg:space-y-0">
@@ -486,7 +583,9 @@ export default function CitasPage() {
               onTimeSlotClick={handleTimeSlotClick}
               onEditAppointment={openBookingModal}
               onCancelAppointment={handleCancelAppointment}
+              onRescheduleAppointment={handleRescheduleAppointment}
               isDayBlocked={isDayBlocked}
+              reschedulingAppointment={reschedulingAppointment}
             />
           )}
           
@@ -497,8 +596,10 @@ export default function CitasPage() {
               onTimeSlotClick={handleTimeSlotClick}
               onEditAppointment={openBookingModal}
               onCancelAppointment={handleCancelAppointment}
+              onRescheduleAppointment={handleRescheduleAppointment}
               isDayBlocked={isDayBlocked}
               toggleDayBlock={toggleDayBlock}
+              reschedulingAppointment={reschedulingAppointment}
             />
           )}
           
@@ -552,7 +653,7 @@ export default function CitasPage() {
 }
 
 // Day View Component
-function DayView({ fecha, citas, onTimeSlotClick, onEditAppointment, onCancelAppointment, isDayBlocked }) {
+function DayView({ fecha, citas, onTimeSlotClick, onEditAppointment, onCancelAppointment, onRescheduleAppointment, isDayBlocked, reschedulingAppointment }) {
   const fechaStr = fecha.getFullYear() + '-' + 
     String(fecha.getMonth() + 1).padStart(2, '0') + '-' + 
     String(fecha.getDate()).padStart(2, '0');
@@ -589,6 +690,8 @@ function DayView({ fecha, citas, onTimeSlotClick, onEditAppointment, onCancelApp
                 className={`flex items-center border-l-4 transition-colors ${
                   isBlocked 
                     ? 'border-red-200 bg-red-50 cursor-not-allowed' 
+                    : reschedulingAppointment && citasEnHora.length === 0
+                    ? 'border-yellow-300 bg-yellow-50 hover:border-yellow-400 hover:bg-yellow-100 cursor-pointer'
                     : 'border-gray-200 hover:border-dental-teal hover:bg-gray-50 cursor-pointer'
                 }`}
                 onClick={() => !isBlocked && onTimeSlotClick(fecha, hora)}
@@ -606,7 +709,9 @@ function DayView({ fecha, citas, onTimeSlotClick, onEditAppointment, onCancelApp
                       {citasEnHora.map(cita => (
                         <div 
                           key={cita.id}
-                          className="bg-dental-teal text-white rounded-md px-3 py-1 mr-2 text-sm flex items-center space-x-2"
+                          className={`bg-dental-teal text-white rounded-md px-3 py-1 mr-2 text-sm flex items-center space-x-2 ${
+                            reschedulingAppointment?.id === cita.id ? 'ring-2 ring-yellow-400 bg-yellow-600' : ''
+                          }`}
                         >
                           <span>{cita.paciente}</span>
                           <span className="text-xs">({cita.hora_inicio} - {cita.hora_fin})</span>
@@ -616,8 +721,19 @@ function DayView({ fecha, citas, onTimeSlotClick, onEditAppointment, onCancelApp
                               onEditAppointment(null, cita);
                             }}
                             className="text-white/80 hover:text-white"
+                            title="Editar cita"
                           >
                             <PencilIcon className="w-3 h-3" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onRescheduleAppointment(cita);
+                            }}
+                            className="text-white/80 hover:text-white"
+                            title="Reagendar cita"
+                          >
+                            <ArrowsRightLeftIcon className="w-3 h-3" />
                           </button>
                           <button
                             onClick={(e) => {
@@ -625,13 +741,18 @@ function DayView({ fecha, citas, onTimeSlotClick, onEditAppointment, onCancelApp
                               onCancelAppointment(cita);
                             }}
                             className="text-white/80 hover:text-white"
+                            title="Cancelar cita"
                           >
                             <XMarkIcon className="w-3 h-3" />
                           </button>
                         </div>
                       ))}
                       {citasEnHora.length === 0 && (
-                        <span className="text-gray-400 text-sm">Click para agendar cita</span>
+                        <span className={`text-sm ${
+                          reschedulingAppointment ? 'text-yellow-600 font-medium' : 'text-gray-400'
+                        }`}>
+                          {reschedulingAppointment ? 'Click para reagendar aquí' : 'Click para agendar cita'}
+                        </span>
                       )}
                     </>
                   )}
@@ -646,7 +767,7 @@ function DayView({ fecha, citas, onTimeSlotClick, onEditAppointment, onCancelApp
 }
 
 // Week View Component  
-function WeekView({ fechaSeleccionada, citas, onTimeSlotClick, onEditAppointment, onCancelAppointment, isDayBlocked, toggleDayBlock }) {
+function WeekView({ fechaSeleccionada, citas, onTimeSlotClick, onEditAppointment, onCancelAppointment, onRescheduleAppointment, isDayBlocked, toggleDayBlock, reschedulingAppointment }) {
   const weekDates = getWeekDates(fechaSeleccionada);
   
   const formatTime = (timeStr) => {
@@ -723,8 +844,9 @@ function WeekView({ fechaSeleccionada, citas, onTimeSlotClick, onEditAppointment
                     key={date.toISOString()}
                     className={`min-h-[40px] p-1 border-l ${
                       isBlocked ? 'bg-red-50 cursor-not-allowed' :
+                      reschedulingAppointment && citasEnHora.length === 0 ? 'bg-yellow-50 hover:bg-yellow-100 cursor-pointer' :
                       'hover:bg-gray-50 cursor-pointer'
-                    } ${isToday && !isBlocked ? 'bg-dental-teal bg-opacity-5' : ''}`}
+                    } ${isToday && !isBlocked && !reschedulingAppointment ? 'bg-dental-teal bg-opacity-5' : ''}`}
                     onClick={() => !isBlocked && onTimeSlotClick(date, hora)}
                   >
                     {isBlocked ? (
@@ -735,7 +857,9 @@ function WeekView({ fechaSeleccionada, citas, onTimeSlotClick, onEditAppointment
                       citasEnHora.map(cita => (
                         <div 
                           key={cita.id}
-                          className="bg-dental-teal text-white rounded px-1 py-0.5 text-xs flex items-center justify-between"
+                          className={`bg-dental-teal text-white rounded px-1 py-0.5 text-xs flex items-center justify-between ${
+                            reschedulingAppointment?.id === cita.id ? 'ring-1 ring-yellow-400 bg-yellow-600' : ''
+                          }`}
                         >
                           <span className="truncate">{cita.paciente}</span>
                           <div className="flex space-x-1 ml-1">
@@ -745,8 +869,19 @@ function WeekView({ fechaSeleccionada, citas, onTimeSlotClick, onEditAppointment
                                 onEditAppointment(null, cita);
                               }}
                               className="text-white/80 hover:text-white"
+                              title="Editar cita"
                             >
                               <PencilIcon className="w-3 h-3" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onRescheduleAppointment(cita);
+                              }}
+                              className="text-white/80 hover:text-white"
+                              title="Reagendar cita"
+                            >
+                              <ArrowsRightLeftIcon className="w-3 h-3" />
                             </button>
                             <button
                               onClick={(e) => {
@@ -754,6 +889,7 @@ function WeekView({ fechaSeleccionada, citas, onTimeSlotClick, onEditAppointment
                                 onCancelAppointment(cita);
                               }}
                               className="text-white/80 hover:text-white"
+                              title="Cancelar cita"
                             >
                               <XMarkIcon className="w-3 h-3" />
                             </button>
