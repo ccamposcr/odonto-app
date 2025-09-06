@@ -57,7 +57,9 @@ export default function CitasPage() {
       
       // Para vista de día, filtrar por fecha específica
       if (vistaCalendario === 'dia') {
-        const fechaStr = fechaSeleccionada.toISOString().split('T')[0];
+        const fechaStr = fechaSeleccionada.getFullYear() + '-' + 
+          String(fechaSeleccionada.getMonth() + 1).padStart(2, '0') + '-' + 
+          String(fechaSeleccionada.getDate()).padStart(2, '0');
         url += `?fecha=${fechaStr}`;
       }
       
@@ -288,22 +290,23 @@ export default function CitasPage() {
   };
 
   const getWeekDates = (date) => {
-    const startOfWeek = new Date(date);
+    const startOfWeek = new Date(date.getFullYear(), date.getMonth(), date.getDate());
     const day = startOfWeek.getDay();
     const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
     startOfWeek.setDate(diff);
 
     const weekDates = [];
     for (let i = 0; i < 7; i++) {
-      const day = new Date(startOfWeek);
-      day.setDate(startOfWeek.getDate() + i);
-      weekDates.push(day);
+      const currentDay = new Date(startOfWeek.getFullYear(), startOfWeek.getMonth(), startOfWeek.getDate() + i);
+      weekDates.push(currentDay);
     }
     return weekDates;
   };
 
   const getCitasForDateAndTime = (fecha, hora) => {
-    const fechaStr = fecha.toISOString().split('T')[0];
+    const fechaStr = fecha.getFullYear() + '-' + 
+      String(fecha.getMonth() + 1).padStart(2, '0') + '-' + 
+      String(fecha.getDate()).padStart(2, '0');
     return citas.filter(cita => 
       cita.fecha === fechaStr && 
       cita.hora_inicio <= hora && 
@@ -327,7 +330,9 @@ export default function CitasPage() {
       // Si no hay cita, abrir para crear nueva
       const horaFin = HORAS_DIA[HORAS_DIA.indexOf(hora) + 1] || '18:30';
       openBookingModal({
-        fecha: fecha.toISOString().split('T')[0],
+        fecha: fecha.getFullYear() + '-' + 
+          String(fecha.getMonth() + 1).padStart(2, '0') + '-' + 
+          String(fecha.getDate()).padStart(2, '0'),
         hora_inicio: hora,
         hora_fin: horaFin
       });
@@ -418,7 +423,9 @@ export default function CitasPage() {
                       `${getWeekDates(fechaSeleccionada)[0].toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })} - ${getWeekDates(fechaSeleccionada)[6].toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}`
                     }
                     {vistaCalendario === 'dia' && 
-                      formatDate(fechaSeleccionada.toISOString().split('T')[0])
+                      formatDate(fechaSeleccionada.getFullYear() + '-' + 
+                        String(fechaSeleccionada.getMonth() + 1).padStart(2, '0') + '-' + 
+                        String(fechaSeleccionada.getDate()).padStart(2, '0'))
                     }
                   </h2>
                 </div>
@@ -512,7 +519,9 @@ export default function CitasPage() {
 
 // Day View Component
 function DayView({ fecha, citas, onTimeSlotClick, onEditAppointment, onCancelAppointment }) {
-  const fechaStr = fecha.toISOString().split('T')[0];
+  const fechaStr = fecha.getFullYear() + '-' + 
+    String(fecha.getMonth() + 1).padStart(2, '0') + '-' + 
+    String(fecha.getDate()).padStart(2, '0');
   const citasDelDia = citas.filter(cita => cita.fecha === fechaStr && cita.estado !== 'cancelada');
 
   const formatTime = (timeStr) => {
@@ -544,10 +553,10 @@ function DayView({ fecha, citas, onTimeSlotClick, onEditAppointment, onCancelApp
                 className="flex items-center border-l-4 border-gray-200 hover:border-dental-teal hover:bg-gray-50 cursor-pointer transition-colors"
                 onClick={() => onTimeSlotClick(fecha, hora)}
               >
-                <div className="w-16 text-sm text-gray-600 font-medium pl-3">
+                <div className="w-20 text-sm text-gray-600 font-medium pl-3 flex-shrink-0">
                   {formatTime(hora)}
                 </div>
-                <div className="flex-1 min-h-[48px] flex items-center px-4">
+                <div className="flex-1 min-h-[48px] flex items-center px-3">
                   {citasEnHora.map(cita => (
                     <div 
                       key={cita.id}
@@ -607,16 +616,19 @@ function WeekView({ fechaSeleccionada, citas, onTimeSlotClick, onEditAppointment
         {/* Header with days */}
         <div className="grid grid-cols-8 border-b">
           <div className="p-3 text-sm font-medium text-gray-600"></div>
-          {weekDates.map(date => (
-            <div key={date.toISOString()} className="p-3 text-center border-l">
-              <div className="text-sm font-medium text-gray-800">
-                {date.toLocaleDateString('es-ES', { weekday: 'short' }).toUpperCase()}
+          {weekDates.map(date => {
+            const isToday = date.toDateString() === new Date().toDateString();
+            return (
+              <div key={date.toISOString()} className={`p-3 text-center border-l ${isToday ? 'bg-dental-teal bg-opacity-10 ring-2 ring-dental-teal ring-inset' : ''}`}>
+                <div className={`text-sm font-medium ${isToday ? 'text-dental-dark-teal' : 'text-gray-800'}`}>
+                  {date.toLocaleDateString('es-ES', { weekday: 'short' }).toUpperCase()}
+                </div>
+                <div className={`text-lg font-semibold mt-1 ${isToday ? 'text-dental-dark-teal' : 'text-gray-800'}`}>
+                  {date.getDate()}
+                </div>
               </div>
-              <div className="text-lg font-semibold text-gray-800 mt-1">
-                {date.getDate()}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Time slots */}
@@ -627,18 +639,21 @@ function WeekView({ fechaSeleccionada, citas, onTimeSlotClick, onEditAppointment
                 {formatTime(hora)}
               </div>
               {weekDates.map(date => {
-                const fechaStr = date.toISOString().split('T')[0];
+                const fechaStr = date.getFullYear() + '-' + 
+                  String(date.getMonth() + 1).padStart(2, '0') + '-' + 
+                  String(date.getDate()).padStart(2, '0');
                 const citasEnHora = citas.filter(cita => 
                   cita.fecha === fechaStr && 
                   cita.hora_inicio <= hora && 
                   cita.hora_fin > hora &&
                   cita.estado !== 'cancelada'
                 );
+                const isToday = date.toDateString() === new Date().toDateString();
 
                 return (
                   <div 
                     key={date.toISOString()}
-                    className="min-h-[40px] p-1 border-l hover:bg-gray-50 cursor-pointer"
+                    className={`min-h-[40px] p-1 border-l hover:bg-gray-50 cursor-pointer ${isToday ? 'bg-dental-teal bg-opacity-5' : ''}`}
                     onClick={() => onTimeSlotClick(date, hora)}
                   >
                     {citasEnHora.map(cita => (
@@ -701,7 +716,9 @@ function MonthView({ fechaSeleccionada, citas, onDateClick }) {
   }
   
   const getCitasForDate = (date) => {
-    const fechaStr = date.toISOString().split('T')[0];
+    const fechaStr = date.getFullYear() + '-' + 
+      String(date.getMonth() + 1).padStart(2, '0') + '-' + 
+      String(date.getDate()).padStart(2, '0');
     return citas.filter(cita => cita.fecha === fechaStr && cita.estado !== 'cancelada');
   };
 
@@ -954,16 +971,15 @@ function AppointmentModal({
 }
 
 function getWeekDates(date) {
-  const startOfWeek = new Date(date);
+  const startOfWeek = new Date(date.getFullYear(), date.getMonth(), date.getDate());
   const day = startOfWeek.getDay();
   const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
   startOfWeek.setDate(diff);
 
   const weekDates = [];
   for (let i = 0; i < 7; i++) {
-    const day = new Date(startOfWeek);
-    day.setDate(startOfWeek.getDate() + i);
-    weekDates.push(day);
+    const currentDay = new Date(startOfWeek.getFullYear(), startOfWeek.getMonth(), startOfWeek.getDate() + i);
+    weekDates.push(currentDay);
   }
   return weekDates;
 }
